@@ -8,9 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3 } from "lucide-react";
+import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
+import { TaskDialog } from "@/components/TaskDialog";
 
 interface Project {
   id: string;
@@ -44,6 +45,8 @@ const Project = () => {
   const [userMessage, setUserMessage] = useState("");
   const [generating, setGenerating] = useState(false);
   const [tasksGenerated, setTasksGenerated] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
 
   useEffect(() => {
     loadProject();
@@ -187,6 +190,15 @@ const Project = () => {
     const pending = deptTasks.filter(t => t.status === "pending").length;
     const progress = total > 0 ? (completed / total) * 100 : 0;
     return { total, completed, inProgress, pending, progress };
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDialogOpen(true);
+  };
+
+  const handleTaskUpdate = async () => {
+    await loadTasks();
   };
 
   return (
@@ -378,19 +390,36 @@ const Project = () => {
                               <TableRow>
                                 <TableHead>Task</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Description</TableHead>
+                                <TableHead className="max-w-md">Description</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {deptTasks.map((task) => (
-                                <TableRow key={task.id}>
+                                <TableRow 
+                                  key={task.id} 
+                                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                  onClick={() => handleTaskClick(task)}
+                                >
                                   <TableCell className="font-medium">{task.title}</TableCell>
                                   <TableCell>
                                     <Badge variant={getStatusColor(task.status)}>
                                       {task.status.replace("_", " ")}
                                     </Badge>
                                   </TableCell>
-                                  <TableCell className="max-w-md">{task.description}</TableCell>
+                                  <TableCell className="max-w-md truncate">{task.description}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleTaskClick(task);
+                                      }}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -405,6 +434,17 @@ const Project = () => {
           </div>
         )}
       </main>
+
+      <TaskDialog
+        task={selectedTask}
+        open={isTaskDialogOpen}
+        onOpenChange={setIsTaskDialogOpen}
+        onTaskUpdate={handleTaskUpdate}
+        departmentName={selectedTask && departments.length > 0 
+          ? departments.find(d => d.id === selectedTask.department_id)?.name || "Unknown"
+          : undefined
+        }
+      />
     </div>
   );
 };

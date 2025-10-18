@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Loader2, CheckCircle2, ListTodo, BarChart3 } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, ListTodo, BarChart3, Eye } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
+import { TaskDialog } from "@/components/TaskDialog";
 
 interface Department {
   id: string;
@@ -21,6 +22,7 @@ interface Task {
   title: string;
   description: string;
   status: string;
+  department_id: string;
   image_url: string | null;
   created_at: string;
 }
@@ -31,6 +33,8 @@ const Department = () => {
   const [department, setDepartment] = useState<Department | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
 
   useEffect(() => {
     loadDepartment();
@@ -88,6 +92,15 @@ const Department = () => {
   const inProgressTasks = tasks.filter(t => t.status === "in_progress").length;
   const pendingTasks = tasks.filter(t => t.status === "pending").length;
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDialogOpen(true);
+  };
+
+  const handleTaskUpdate = async () => {
+    await loadTasks();
+  };
 
   if (loading) {
     return (
@@ -194,19 +207,36 @@ const Department = () => {
                     <TableRow>
                       <TableHead>Task</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead className="max-w-md">Description</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {tasks.map((task) => (
-                      <TableRow key={task.id}>
+                      <TableRow 
+                        key={task.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleTaskClick(task)}
+                      >
                         <TableCell className="font-medium">{task.title}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusColor(task.status)}>
                             {task.status.replace("_", " ")}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-md">{task.description}</TableCell>
+                        <TableCell className="max-w-md truncate">{task.description}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTaskClick(task);
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -216,6 +246,14 @@ const Department = () => {
           </Card>
         </div>
       </main>
+
+      <TaskDialog
+        task={selectedTask}
+        open={isTaskDialogOpen}
+        onOpenChange={setIsTaskDialogOpen}
+        onTaskUpdate={handleTaskUpdate}
+        departmentName={department?.name}
+      />
     </div>
   );
 };
