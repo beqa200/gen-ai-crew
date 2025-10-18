@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Zap, Users, Brain } from "lucide-react";
+import { Zap, Users, Brain } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -9,10 +10,7 @@ const Index = () => {
     <div className="min-h-screen gradient-hero">
       <header className="container mx-auto px-4 py-6">
         <nav className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">PK.ai</h1>
-          </div>
+          <Logo />
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => navigate("/auth")}>
               Sign In
@@ -31,20 +29,20 @@ const Index = () => {
         <section className="py-20 text-center">
           <div className="max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-              <Sparkles className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
               <span className="text-sm font-medium">AI-Powered Project Management</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Your AI Team,
+              Forge Your Vision
               <br />
               <span className="bg-clip-text text-transparent gradient-primary">
-                Always Working
+                With AI Precision
               </span>
             </h1>
             
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              PK.ai creates intelligent departments that plan, manage, and execute your projects like a real team—automatically.
+              FoundryAI creates intelligent departments that plan, manage, and execute your projects like a real team—automatically.
             </p>
             
             <div className="flex gap-4 justify-center">
@@ -103,7 +101,7 @@ const Index = () => {
 
       <footer className="border-t mt-20 py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2025 PK.ai. Your intelligent project companion.</p>
+          <p>© 2025 FoundryAI. Your intelligent project companion.</p>
         </div>
       </footer>
     </div>

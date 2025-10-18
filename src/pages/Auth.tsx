@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -95,11 +96,8 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center gradient-hero px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold bg-clip-text text-transparent gradient-primary">
-              PK.ai
-            </h1>
+          <div className="flex justify-center mb-4">
+            <Logo iconSize={32} textSize="text-4xl" />
           </div>
           <p className="text-muted-foreground">
             Your intelligent AI project assistant
