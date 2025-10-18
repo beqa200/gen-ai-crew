@@ -3,19 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Plus, UserCircle, FolderKanban, Loader2 } from "lucide-react";
+import { LogOut, UserCircle, FolderKanban, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Logo from "@/components/Logo";
+import CreateProjectDialog from "@/components/CreateProjectDialog";
 
 interface Profile {
   full_name: string | null;
 }
 
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingProjects, setLoadingProjects] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,10 +64,58 @@ const Dashboard = () => {
       }
       
       setProfile(data);
+      await loadProjects(userId);
     } catch (error) {
       console.error("Error loading profile:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProjects = async (userId: string) => {
+    setLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      
+      setProjects(data || []);
+    } catch (error) {
+      console.error("Error loading projects:", error);
+      toast.error("Failed to load projects");
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      toast.success("Project deleted successfully");
+      setProjects(projects.filter(p => p.id !== projectId));
+    } catch (error: any) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
+    }
+  };
+
+  const handleProjectCreated = async () => {
+    if (user) {
+      await loadProjects(user.id);
     }
   };
 
@@ -103,7 +161,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="shadow-elegant hover:shadow-glow transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -136,22 +194,47 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card 
-            className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer shadow-elegant hover:shadow-glow"
-            onClick={() => toast.info("Project creation coming soon!")}
-          >
-            <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4">
-              <div className="rounded-full bg-primary/10 p-4">
-                <Plus className="w-8 h-8 text-primary" />
-              </div>
-              <div className="text-center">
-                <h3 className="font-semibold mb-1">Create New Project</h3>
-                <p className="text-sm text-muted-foreground">
-                  Start a new AI-powered project
-                </p>
-              </div>
+          <Card className="border-dashed border-2 hover:border-primary transition-colors shadow-elegant hover:shadow-glow">
+            <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4 p-6">
+              <CreateProjectDialog onProjectCreated={handleProjectCreated} />
             </CardContent>
           </Card>
+
+          {loadingProjects ? (
+            <Card className="shadow-elegant">
+              <CardContent className="flex items-center justify-center min-h-[200px]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </CardContent>
+            </Card>
+          ) : projects.length > 0 ? (
+            projects.map((project) => (
+              <Card key={project.id} className="shadow-elegant hover:shadow-glow transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <CardTitle className="line-clamp-1">{project.name}</CardTitle>
+                      <CardDescription className="line-clamp-2 mt-1">
+                        {project.description || "No description"}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteProject(project.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-muted-foreground">
+                    Created {new Date(project.created_at).toLocaleDateString()}
+                  </p>
+                </CardContent>
+              </Card>
+            ))
+          ) : null}
         </div>
       </main>
     </div>
