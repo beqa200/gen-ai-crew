@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
@@ -43,7 +44,6 @@ const Project = () => {
   const [userMessage, setUserMessage] = useState("");
   const [generating, setGenerating] = useState(false);
   const [tasksGenerated, setTasksGenerated] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
 
   useEffect(() => {
     loadProject();
@@ -167,11 +167,6 @@ const Project = () => {
       default:
         return "outline";
     }
-  };
-
-  const getDepartmentName = (departmentId: string) => {
-    const dept = departments.find(d => d.id === departmentId);
-    return dept?.name || "Unknown";
   };
 
   const totalTasks = tasks.length;
@@ -313,82 +308,100 @@ const Project = () => {
               </CardContent>
             </Card>
 
-            <div className="space-y-6">
-              {departments.map((dept) => {
-                const deptTasks = getTasksForDepartment(dept.id);
-                const stats = getDepartmentStats(dept.id);
-                
-                return (
-                  <Card key={dept.id} className="shadow-elegant">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>{dept.name}</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {stats.total} tasks • {Math.round(stats.progress)}% complete
-                          </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Departments & Tasks</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue={departments[0]?.id} className="w-full">
+                  <TabsList className="w-full justify-start flex-wrap h-auto">
+                    {departments.map((dept) => {
+                      const stats = getDepartmentStats(dept.id);
+                      return (
+                        <TabsTrigger key={dept.id} value={dept.id} className="flex items-center gap-2">
+                          {dept.name}
+                          <Badge variant="secondary" className="ml-1">
+                            {stats.total}
+                          </Badge>
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                  
+                  {departments.map((dept) => {
+                    const deptTasks = getTasksForDepartment(dept.id);
+                    const stats = getDepartmentStats(dept.id);
+                    
+                    return (
+                      <TabsContent key={dept.id} value={dept.id} className="space-y-4 mt-6">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <h3 className="text-lg font-semibold">{dept.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {stats.completed} of {stats.total} completed • {Math.round(stats.progress)}%
+                            </p>
+                          </div>
+                          <Progress value={stats.progress} className="w-48 h-2" />
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/project/${id}/department/${dept.id}`)}
-                        >
-                          View Details
-                        </Button>
-                      </div>
-                      <Progress value={stats.progress} className="h-2 mt-4" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid gap-4 md:grid-cols-3 mb-6">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-green-600" />
-                          <span className="text-sm font-medium">Completed: {stats.completed}</span>
+
+                        <div className="grid gap-4 md:grid-cols-3">
+                          <div className="flex items-center gap-2 p-3 rounded-lg border">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Completed</p>
+                              <p className="text-xl font-bold text-green-600">{stats.completed}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 p-3 rounded-lg border">
+                            <Loader2 className="w-4 h-4 text-blue-600" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">In Progress</p>
+                              <p className="text-xl font-bold text-blue-600">{stats.inProgress}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 p-3 rounded-lg border">
+                            <ListTodo className="w-4 h-4" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">Pending</p>
+                              <p className="text-xl font-bold">{stats.pending}</p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium">In Progress: {stats.inProgress}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <ListTodo className="w-4 h-4" />
-                          <span className="text-sm font-medium">Pending: {stats.pending}</span>
-                        </div>
-                      </div>
-                      
-                      {deptTasks.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                          No tasks in this department
-                        </div>
-                      ) : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Task</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Description</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {deptTasks.map((task) => (
-                              <TableRow key={task.id}>
-                                <TableCell className="font-medium">{task.title}</TableCell>
-                                <TableCell>
-                                  <Badge variant={getStatusColor(task.status)}>
-                                    {task.status.replace("_", " ")}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="max-w-md truncate">
-                                  {task.description}
-                                </TableCell>
+
+                        {deptTasks.length === 0 ? (
+                          <div className="text-center py-12 text-muted-foreground border rounded-lg">
+                            No tasks in this department
+                          </div>
+                        ) : (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Task</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Description</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                            </TableHeader>
+                            <TableBody>
+                              {deptTasks.map((task) => (
+                                <TableRow key={task.id}>
+                                  <TableCell className="font-medium">{task.title}</TableCell>
+                                  <TableCell>
+                                    <Badge variant={getStatusColor(task.status)}>
+                                      {task.status.replace("_", " ")}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="max-w-md">{task.description}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
+                      </TabsContent>
+                    );
+                  })}
+                </Tabs>
+              </CardContent>
+            </Card>
           </div>
         )}
       </main>
