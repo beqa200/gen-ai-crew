@@ -170,7 +170,7 @@ const Dashboard = () => {
             </p>
           </div>
           {projects.length > 0 && (
-            <CreateProjectDialog onProjectCreated={handleProjectCreated} />
+            <CreateProjectDialog onProjectCreated={handleProjectCreated} asButton />
           )}
         </div>
 

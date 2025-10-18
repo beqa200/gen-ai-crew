@@ -19,9 +19,10 @@ import { toast } from "sonner";
 
 interface CreateProjectDialogProps {
   onProjectCreated: () => void;
+  asButton?: boolean;
 }
 
-const CreateProjectDialog = ({ onProjectCreated }: CreateProjectDialogProps) => {
+const CreateProjectDialog = ({ onProjectCreated, asButton = false }: CreateProjectDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -70,19 +71,26 @@ const CreateProjectDialog = ({ onProjectCreated }: CreateProjectDialogProps) => 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer shadow-elegant hover:shadow-glow w-full">
-          <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4 p-6">
-            <div className="rounded-full bg-primary/10 p-4">
-              <Plus className="w-8 h-8 text-primary" />
-            </div>
-            <div className="text-center">
-              <h3 className="font-semibold mb-1">Create New Project</h3>
-              <p className="text-sm text-muted-foreground">
-                Start a new AI-powered project
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {asButton ? (
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Project
+          </Button>
+        ) : (
+          <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer shadow-elegant hover:shadow-glow w-full">
+            <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4 p-6">
+              <div className="rounded-full bg-primary/10 p-4">
+                <Plus className="w-8 h-8 text-primary" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-semibold mb-1">Create New Project</h3>
+                <p className="text-sm text-muted-foreground">
+                  Start a new AI-powered project
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
