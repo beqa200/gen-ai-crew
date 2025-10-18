@@ -129,4 +129,13 @@ All colors MUST be HSL.
       box-shadow: var(--shadow-glow);
     }
   }
+
+  @keyframes gradient {
+    0%, 100% {
+      background-position: 0% center;
+    }
+    50% {
+      background-position: 100% center;
+    }
+  }
 }
