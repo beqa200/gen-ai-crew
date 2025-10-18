@@ -120,7 +120,7 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
 
       if (saveUserError) throw saveUserError;
 
-      // Get AI response
+      // Get AI response with chat history
       const { data, error } = await supabase.functions.invoke('task-assistant', {
         body: {
           message: userMessage,
@@ -129,7 +129,8 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
             description: displayTask.description,
             status: displayTask.status,
             departmentName: departmentName
-          }
+          },
+          chatHistory: aiMessages
         }
       });
 

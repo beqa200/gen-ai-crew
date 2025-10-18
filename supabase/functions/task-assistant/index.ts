@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, taskContext } = await req.json();
+    const { message, taskContext, chatHistory } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -34,6 +34,13 @@ Help the user with:
 
 Keep responses concise and actionable.`;
 
+    // Build messages array with chat history
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...(chatHistory || []),
+      { role: "user", content: message }
+    ];
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -42,10 +49,7 @@ Keep responses concise and actionable.`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message }
-        ],
+        messages: messages,
         stream: false,
       }),
     });
