@@ -162,9 +162,11 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
                   </SelectContent>
                 </Select>
               ) : (
-                <Badge className={getStatusColor(displayTask?.status || "pending")}>
-                  {getStatusLabel(displayTask?.status || "pending")}
-                </Badge>
+                <div className="pt-2">
+                  <Badge className={getStatusColor(displayTask?.status || "pending")}>
+                    {getStatusLabel(displayTask?.status || "pending")}
+                  </Badge>
+                </div>
               )}
             </div>
 
