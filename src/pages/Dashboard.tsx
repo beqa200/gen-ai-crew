@@ -221,7 +221,11 @@ const Dashboard = () => {
             </Card>
           ) : projects.length > 0 ? (
             projects.map((project) => (
-              <Card key={project.id} className="shadow-elegant hover:shadow-glow transition-all group overflow-hidden">
+              <Card 
+                key={project.id} 
+                className="shadow-elegant hover:shadow-glow transition-all group overflow-hidden cursor-pointer"
+                onClick={() => navigate(`/project/${project.id}`)}
+              >
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">

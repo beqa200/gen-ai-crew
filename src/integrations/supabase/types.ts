@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -67,6 +96,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          department_id: string
+          description: string
+          id: string
+          image_url: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          description: string
+          id?: string
+          image_url?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          description?: string
+          id?: string
+          image_url?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
