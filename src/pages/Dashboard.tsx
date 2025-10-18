@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Sparkles, Plus } from "lucide-react";
+import { LogOut, Sparkles, Plus, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 
@@ -56,10 +56,16 @@ const Dashboard = () => {
             <Sparkles className="w-6 h-6 text-primary" />
             <h1 className="text-2xl font-bold">PK.ai</h1>
           </div>
-          <Button variant="ghost" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => navigate("/profile")}>
+              <UserCircle className="w-4 h-4 mr-2" />
+              Profile
+            </Button>
+            <Button variant="ghost" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
