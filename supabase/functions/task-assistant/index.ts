@@ -26,11 +26,14 @@ You're helping with a specific task:
 - Status: ${taskContext.status}
 - Department: ${taskContext.departmentName || 'Unknown'}
 
+IMPORTANT: You have access to the full conversation history with the user. When they ask about previous messages or context, refer to the conversation history that is provided to you.
+
 Help the user with:
 - Breaking down the task into smaller steps
 - Suggesting improvements or approaches
 - Answering questions about the task
 - Providing relevant information or tips
+- Referring to previous parts of your conversation when relevant
 
 Keep responses concise and actionable.`;
 
