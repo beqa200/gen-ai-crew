@@ -448,6 +448,7 @@ const Project = () => {
           ? departments.find(d => d.id === selectedTask.department_id)?.name || "Unknown"
           : undefined
         }
+        projectDescription={project.description || undefined}
       />
     </div>
   );

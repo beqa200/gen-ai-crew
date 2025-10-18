@@ -20,7 +20,8 @@ serve(async (req) => {
     }
 
     const systemPrompt = `You are a helpful AI assistant for a task management system. 
-You're helping with a specific task:
+
+${taskContext.projectDescription ? `PROJECT CONTEXT:\n${taskContext.projectDescription}\n\n` : ''}You're helping with a specific task:
 - Title: ${taskContext.title}
 - Description: ${taskContext.description}
 - Status: ${taskContext.status}
@@ -30,8 +31,8 @@ IMPORTANT: You have access to the full conversation history with the user. When 
 
 Help the user with:
 - Breaking down the task into smaller steps
-- Suggesting improvements or approaches
-- Answering questions about the task
+- Suggesting improvements or approaches that align with the overall project goals
+- Answering questions about the task in the context of the startup
 - Providing relevant information or tips
 - Referring to previous parts of your conversation when relevant
 
