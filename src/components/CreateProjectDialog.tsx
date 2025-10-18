@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -69,17 +70,19 @@ const CreateProjectDialog = ({ onProjectCreated }: CreateProjectDialogProps) => 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <div className="cursor-pointer">
-          <div className="rounded-full bg-primary/10 p-4 mb-4">
-            <Plus className="w-8 h-8 text-primary" />
-          </div>
-          <div className="text-center">
-            <h3 className="font-semibold mb-1">Create New Project</h3>
-            <p className="text-sm text-muted-foreground">
-              Start a new AI-powered project
-            </p>
-          </div>
-        </div>
+        <Card className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer shadow-elegant hover:shadow-glow w-full">
+          <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4 p-6">
+            <div className="rounded-full bg-primary/10 p-4">
+              <Plus className="w-8 h-8 text-primary" />
+            </div>
+            <div className="text-center">
+              <h3 className="font-semibold mb-1">Create New Project</h3>
+              <p className="text-sm text-muted-foreground">
+                Start a new AI-powered project
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>

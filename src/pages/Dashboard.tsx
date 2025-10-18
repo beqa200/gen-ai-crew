@@ -194,11 +194,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-dashed border-2 hover:border-primary transition-colors shadow-elegant hover:shadow-glow">
-            <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4 p-6">
-              <CreateProjectDialog onProjectCreated={handleProjectCreated} />
-            </CardContent>
-          </Card>
+          <CreateProjectDialog onProjectCreated={handleProjectCreated} />
 
           {loadingProjects ? (
             <Card className="shadow-elegant">
