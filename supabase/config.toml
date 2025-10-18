@@ -2,3 +2,6 @@ project_id = "drpdlvpfzetsxgbbkcej"
 
 [functions.generate-tasks]
 verify_jwt = true
+
+[functions.task-assistant]
+verify_jwt = true

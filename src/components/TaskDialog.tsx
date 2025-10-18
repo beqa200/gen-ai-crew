@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Calendar, Tag } from "lucide-react";
+import { Loader2, Calendar, Tag, Bot, Send } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Task {
   id: string;
@@ -32,6 +33,10 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedTask, setEditedTask] = useState<Task | null>(task);
+  const [showAI, setShowAI] = useState(false);
+  const [aiMessages, setAiMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [aiInput, setAiInput] = useState("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const handleEdit = () => {
     setEditedTask(task);
@@ -71,6 +76,38 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
     }
   };
 
+  const handleAiMessage = async () => {
+    if (!aiInput.trim() || !displayTask) return;
+
+    const userMessage = aiInput.trim();
+    setAiMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setAiInput("");
+    setIsAiLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('task-assistant', {
+        body: {
+          message: userMessage,
+          taskContext: {
+            title: displayTask.title,
+            description: displayTask.description,
+            status: displayTask.status,
+            departmentName: departmentName
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      setAiMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+    } catch (error) {
+      console.error("Error calling AI assistant:", error);
+      toast.error("Failed to get AI response");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -100,7 +137,7 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {isEditing ? "Edit Task" : "Task Details"}
@@ -115,7 +152,8 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="flex gap-4 flex-1 overflow-hidden">
+          <div className={`space-y-6 py-4 overflow-y-auto ${showAI ? 'w-1/2' : 'w-full'}`}>
           {displayTask?.image_url && (
             <div className="w-full h-64 rounded-lg overflow-hidden">
               <img
@@ -198,6 +236,52 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
           </div>
         </div>
 
+        {showAI && (
+          <div className="w-1/2 border-l pl-4 flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <Bot className="w-5 h-5" />
+              <h3 className="font-semibold">AI Assistant</h3>
+            </div>
+            
+            <ScrollArea className="flex-1 pr-4 mb-4">
+              <div className="space-y-4">
+                {aiMessages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Ask me anything about this task! I can help break it down, suggest approaches, or answer questions.
+                  </p>
+                ) : (
+                  aiMessages.map((msg, idx) => (
+                    <div key={idx} className={`p-3 rounded-lg ${msg.role === 'user' ? 'bg-primary/10' : 'bg-muted'}`}>
+                      <p className="text-sm font-medium mb-1">{msg.role === 'user' ? 'You' : 'AI Assistant'}</p>
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  ))
+                )}
+                {isAiLoading && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Thinking...</span>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="flex gap-2">
+              <Input
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAiMessage()}
+                placeholder="Ask the AI assistant..."
+                disabled={isAiLoading}
+              />
+              <Button onClick={handleAiMessage} disabled={isAiLoading || !aiInput.trim()} size="icon">
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
         <DialogFooter>
           {isEditing ? (
             <>
@@ -219,6 +303,10 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Close
+              </Button>
+              <Button variant="outline" onClick={() => setShowAI(!showAI)}>
+                <Bot className="w-4 h-4 mr-2" />
+                {showAI ? 'Hide' : 'Show'} AI Assistant
               </Button>
               <Button onClick={handleEdit}>Edit Task</Button>
             </>
