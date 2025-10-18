@@ -10,8 +10,10 @@ import { Loader2, Sparkles } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -46,17 +48,41 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Welcome back!");
       } else {
+        // Validation for signup
+        if (!fullName.trim()) {
+          toast.error("Please enter your full name");
+          setLoading(false);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          toast.error("Passwords do not match");
+          setLoading(false);
+          return;
+        }
+
+        if (password.length < 6) {
+          toast.error("Password must be at least 6 characters");
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: {
+              full_name: fullName,
+            },
           },
         });
 
         if (error) throw error;
         toast.success("Account created! You can now sign in.");
         setIsLogin(true);
+        setFullName("");
+        setConfirmPassword("");
       }
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
@@ -91,6 +117,21 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -117,6 +158,22 @@ const Auth = () => {
                   minLength={6}
                 />
               </div>
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    minLength={6}
+                  />
+                </div>
+              )}
 
               <Button
                 type="submit"
