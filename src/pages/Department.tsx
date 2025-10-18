@@ -79,12 +79,16 @@ const Department = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "default";
+        return "bg-green-600 text-white hover:bg-green-700";
       case "in_progress":
-        return "secondary";
+        return "bg-blue-600 text-white hover:bg-blue-700";
       default:
-        return "outline";
+        return "bg-gray-600 text-white hover:bg-gray-700";
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.replace("_", " ").toUpperCase();
   };
 
   const totalTasks = tasks.length;
@@ -220,8 +224,8 @@ const Department = () => {
                       >
                         <TableCell className="font-medium">{task.title}</TableCell>
                         <TableCell>
-                          <Badge variant={getStatusColor(task.status)}>
-                            {task.status.replace("_", " ")}
+                          <Badge className={getStatusColor(task.status)}>
+                            {getStatusLabel(task.status)}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-md truncate">{task.description}</TableCell>

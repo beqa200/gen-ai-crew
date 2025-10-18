@@ -74,12 +74,16 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "default";
+        return "bg-green-600 text-white hover:bg-green-700";
       case "in_progress":
-        return "secondary";
+        return "bg-blue-600 text-white hover:bg-blue-700";
       default:
-        return "outline";
+        return "bg-gray-600 text-white hover:bg-gray-700";
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.replace("_", " ").toUpperCase();
   };
 
   const formatDate = (dateString: string) => {
@@ -158,8 +162,8 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
                   </SelectContent>
                 </Select>
               ) : (
-                <Badge variant={getStatusColor(displayTask?.status || "pending")}>
-                  {displayTask?.status.replace("_", " ")}
+                <Badge className={getStatusColor(displayTask?.status || "pending")}>
+                  {getStatusLabel(displayTask?.status || "pending")}
                 </Badge>
               )}
             </div>
