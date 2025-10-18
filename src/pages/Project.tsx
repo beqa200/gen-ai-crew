@@ -174,15 +174,25 @@ const Project = () => {
     return dept?.name || "Unknown";
   };
 
-  const filteredTasks = selectedDepartment === "all" 
-    ? tasks 
-    : tasks.filter(t => t.department_id === selectedDepartment);
-
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === "completed").length;
   const inProgressTasks = tasks.filter(t => t.status === "in_progress").length;
   const pendingTasks = tasks.filter(t => t.status === "pending").length;
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+  const getTasksForDepartment = (deptId: string) => {
+    return tasks.filter(t => t.department_id === deptId);
+  };
+
+  const getDepartmentStats = (deptId: string) => {
+    const deptTasks = getTasksForDepartment(deptId);
+    const total = deptTasks.length;
+    const completed = deptTasks.filter(t => t.status === "completed").length;
+    const inProgress = deptTasks.filter(t => t.status === "in_progress").length;
+    const pending = deptTasks.filter(t => t.status === "pending").length;
+    const progress = total > 0 ? (completed / total) * 100 : 0;
+    return { total, completed, inProgress, pending, progress };
+  };
 
   return (
     <div className="min-h-screen gradient-hero">
@@ -303,63 +313,82 @@ const Project = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Tasks</CardTitle>
-                  <select
-                    value={selectedDepartment}
-                    onChange={(e) => setSelectedDepartment(e.target.value)}
-                    className="px-3 py-1 border rounded-md text-sm bg-background"
-                  >
-                    <option value="all">All Departments</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {filteredTasks.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No tasks found
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Task</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Description</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTasks.map((task) => (
-                        <TableRow key={task.id}>
-                          <TableCell className="font-medium">{task.title}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {getDepartmentName(task.department_id)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusColor(task.status)}>
-                              {task.status.replace("_", " ")}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="max-w-md truncate">
-                            {task.description}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {departments.map((dept) => {
+                const deptTasks = getTasksForDepartment(dept.id);
+                const stats = getDepartmentStats(dept.id);
+                
+                return (
+                  <Card key={dept.id} className="shadow-elegant">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>{dept.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {stats.total} tasks • {Math.round(stats.progress)}% complete
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/project/${id}/department/${dept.id}`)}
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                      <Progress value={stats.progress} className="h-2 mt-4" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-4 md:grid-cols-3 mb-6">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium">Completed: {stats.completed}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm font-medium">In Progress: {stats.inProgress}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ListTodo className="w-4 h-4" />
+                          <span className="text-sm font-medium">Pending: {stats.pending}</span>
+                        </div>
+                      </div>
+                      
+                      {deptTasks.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No tasks in this department
+                        </div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Task</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Description</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {deptTasks.map((task) => (
+                              <TableRow key={task.id}>
+                                <TableCell className="font-medium">{task.title}</TableCell>
+                                <TableCell>
+                                  <Badge variant={getStatusColor(task.status)}>
+                                    {task.status.replace("_", " ")}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="max-w-md truncate">
+                                  {task.description}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         )}
       </main>
