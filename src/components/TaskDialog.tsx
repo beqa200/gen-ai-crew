@@ -34,9 +34,12 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
   const [isSaving, setIsSaving] = useState(false);
   const [editedTask, setEditedTask] = useState<Task | null>(task);
   const [showAI, setShowAI] = useState(false);
-  const [aiMessages, setAiMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [taskChats, setTaskChats] = useState<Record<string, Array<{ role: 'user' | 'assistant'; content: string }>>>({});
   const [aiInput, setAiInput] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const currentTaskId = task?.id || "";
+  const aiMessages = taskChats[currentTaskId] || [];
 
   const handleEdit = () => {
     setEditedTask(task);
@@ -77,10 +80,13 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
   };
 
   const handleAiMessage = async () => {
-    if (!aiInput.trim() || !displayTask) return;
+    if (!aiInput.trim() || !displayTask || !currentTaskId) return;
 
     const userMessage = aiInput.trim();
-    setAiMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setTaskChats(prev => ({
+      ...prev,
+      [currentTaskId]: [...(prev[currentTaskId] || []), { role: 'user', content: userMessage }]
+    }));
     setAiInput("");
     setIsAiLoading(true);
 
@@ -99,7 +105,10 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
 
       if (error) throw error;
 
-      setAiMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+      setTaskChats(prev => ({
+        ...prev,
+        [currentTaskId]: [...(prev[currentTaskId] || []), { role: 'assistant', content: data.message }]
+      }));
     } catch (error) {
       console.error("Error calling AI assistant:", error);
       toast.error("Failed to get AI response");
