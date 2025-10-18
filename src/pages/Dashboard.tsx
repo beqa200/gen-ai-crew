@@ -162,47 +162,56 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Welcome back, {displayName}!</h2>
-          <p className="text-muted-foreground">
-            Ready to forge your next project?
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Welcome back, {displayName}!</h2>
+            <p className="text-muted-foreground">
+              Ready to forge your next project?
+            </p>
+          </div>
+          {projects.length > 0 && (
+            <CreateProjectDialog onProjectCreated={handleProjectCreated} />
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="shadow-elegant hover:shadow-glow transition-shadow">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FolderKanban className="w-5 h-5 text-primary" />
-                <CardTitle>Getting Started</CardTitle>
-              </div>
-              <CardDescription>
-                Learn how to make the most of FoundryAI
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <span>Create your first project</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <span>Set up AI departments</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <span>Generate and manage tasks</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <span>Collaborate with AI assistants</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+          {projects.length === 0 && (
+            <>
+              <Card className="shadow-elegant hover:shadow-glow transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <FolderKanban className="w-5 h-5 text-primary" />
+                    <CardTitle>Getting Started</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Learn how to make the most of FoundryAI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Create your first project</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Set up AI departments</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Generate and manage tasks</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      <span>Collaborate with AI assistants</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
 
-          <CreateProjectDialog onProjectCreated={handleProjectCreated} />
+              <CreateProjectDialog onProjectCreated={handleProjectCreated} />
+            </>
+          )}
 
           {loadingProjects ? (
             <Card className="shadow-elegant">
