@@ -103,24 +103,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card 
-            className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer shadow-elegant hover:shadow-glow"
-            onClick={() => toast.info("Project creation coming soon!")}
-          >
-            <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4">
-              <div className="rounded-full bg-primary/10 p-4">
-                <Plus className="w-8 h-8 text-primary" />
-              </div>
-              <div className="text-center">
-                <h3 className="font-semibold mb-1">Create New Project</h3>
-                <p className="text-sm text-muted-foreground">
-                  Start a new AI-powered project
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
+        <div className="grid gap-6 md:grid-cols-2">
           <Card className="shadow-elegant hover:shadow-glow transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -153,26 +136,19 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-elegant hover:shadow-glow transition-shadow">
-            <CardHeader>
-              <CardTitle>Your Projects</CardTitle>
-              <CardDescription>
-                View and manage your active projects
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground mb-4">
-                  No projects yet
+          <Card 
+            className="border-dashed border-2 hover:border-primary transition-colors cursor-pointer shadow-elegant hover:shadow-glow"
+            onClick={() => toast.info("Project creation coming soon!")}
+          >
+            <CardContent className="flex flex-col items-center justify-center min-h-[200px] gap-4">
+              <div className="rounded-full bg-primary/10 p-4">
+                <Plus className="w-8 h-8 text-primary" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-semibold mb-1">Create New Project</h3>
+                <p className="text-sm text-muted-foreground">
+                  Start a new AI-powered project
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => toast.info("Project creation coming soon!")}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Project
-                </Button>
               </div>
             </CardContent>
           </Card>
