@@ -139,6 +139,17 @@ Be creative with incomplete ideas. If the user says "a fitness app", you should 
     const planData = JSON.parse(toolCall.function.arguments);
     console.log('Parsed plan data:', JSON.stringify(planData, null, 2));
 
+    // Save the initial prompt to project description
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({ description: userMessage })
+      .eq('id', projectId);
+
+    if (updateError) {
+      console.error('Error updating project description:', updateError);
+      // Don't throw - this is not critical
+    }
+
     // Create departments and tasks in database
     const createdDepartments = [];
     
