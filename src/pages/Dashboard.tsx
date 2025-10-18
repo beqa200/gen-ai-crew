@@ -212,21 +212,28 @@ const Dashboard = () => {
             </Card>
           ) : projects.length > 0 ? (
             projects.map((project) => (
-              <Card key={project.id} className="shadow-elegant hover:shadow-glow transition-shadow group">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="line-clamp-1 text-lg mb-1">{project.name}</CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {project.description || "No description provided"}
-                      </CardDescription>
+              <Card key={project.id} className="shadow-elegant hover:shadow-glow transition-all group overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                        <FolderKanban className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg line-clamp-1 mb-1">
+                          {project.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {project.description || "No description provided"}
+                        </p>
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
@@ -249,16 +256,23 @@ const Dashboard = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
+
+                  <div className="pt-4 border-t flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <FolderKanban className="w-3 h-3" />
-                      <span>0 tasks</span>
+                      <span>Created</span>
+                      <span className="font-medium">
+                        {new Date(project.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted">
+                      <span className="font-medium">0 tasks</span>
                     </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))
           ) : null}
