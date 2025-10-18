@@ -3,11 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, UserCircle, FolderKanban, Loader2, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, UserCircle, FolderKanban, Loader2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import Logo from "@/components/Logo";
 import CreateProjectDialog from "@/components/CreateProjectDialog";
+import EditProjectDialog from "@/components/EditProjectDialog";
 
 interface Profile {
   full_name: string | null;
@@ -24,6 +31,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const navigate = useNavigate();
@@ -204,34 +212,66 @@ const Dashboard = () => {
             </Card>
           ) : projects.length > 0 ? (
             projects.map((project) => (
-              <Card key={project.id} className="shadow-elegant hover:shadow-glow transition-shadow">
+              <Card key={project.id} className="shadow-elegant hover:shadow-glow transition-shadow group">
                 <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <CardTitle className="line-clamp-1">{project.name}</CardTitle>
-                      <CardDescription className="line-clamp-2 mt-1">
-                        {project.description || "No description"}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="line-clamp-1 text-lg mb-1">{project.name}</CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {project.description || "No description provided"}
                       </CardDescription>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteProject(project.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40 bg-card z-50">
+                        <DropdownMenuItem
+                          onClick={() => setEditingProject(project)}
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteProject(project.id)}
+                          className="cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-muted-foreground">
-                    Created {new Date(project.created_at).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-1">
+                      <FolderKanban className="w-3 h-3" />
+                      <span>0 tasks</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))
           ) : null}
         </div>
+
+        {editingProject && (
+          <EditProjectDialog
+            project={editingProject}
+            open={!!editingProject}
+            onOpenChange={(open) => !open && setEditingProject(null)}
+            onProjectUpdated={handleProjectCreated}
+          />
+        )}
       </main>
     </div>
   );
