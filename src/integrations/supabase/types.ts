@@ -97,6 +97,38 @@ export type Database = {
         }
         Relationships: []
       }
+      task_ai_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          task_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          task_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_ai_messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           created_at: string

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,12 +34,31 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
   const [isSaving, setIsSaving] = useState(false);
   const [editedTask, setEditedTask] = useState<Task | null>(task);
   const [showAI, setShowAI] = useState(false);
-  const [taskChats, setTaskChats] = useState<Record<string, Array<{ role: 'user' | 'assistant'; content: string }>>>({});
+  const [aiMessages, setAiMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [aiInput, setAiInput] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  const currentTaskId = task?.id || "";
-  const aiMessages = taskChats[currentTaskId] || [];
+  // Load AI chat history when task changes
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!task?.id) return;
+
+      const { data, error } = await supabase
+        .from('task_ai_messages')
+        .select('role, content')
+        .eq('task_id', task.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat history:', error);
+        return;
+      }
+
+      setAiMessages((data || []) as Array<{ role: 'user' | 'assistant'; content: string }>);
+    };
+
+    loadChatHistory();
+  }, [task?.id]);
 
   const handleEdit = () => {
     setEditedTask(task);
@@ -80,17 +99,28 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
   };
 
   const handleAiMessage = async () => {
-    if (!aiInput.trim() || !displayTask || !currentTaskId) return;
+    if (!aiInput.trim() || !displayTask || !task?.id) return;
 
     const userMessage = aiInput.trim();
-    setTaskChats(prev => ({
-      ...prev,
-      [currentTaskId]: [...(prev[currentTaskId] || []), { role: 'user', content: userMessage }]
-    }));
+    
+    // Optimistically add user message to UI
+    setAiMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setAiInput("");
     setIsAiLoading(true);
 
     try {
+      // Save user message to database
+      const { error: saveUserError } = await supabase
+        .from('task_ai_messages')
+        .insert({
+          task_id: task.id,
+          role: 'user',
+          content: userMessage
+        });
+
+      if (saveUserError) throw saveUserError;
+
+      // Get AI response
       const { data, error } = await supabase.functions.invoke('task-assistant', {
         body: {
           message: userMessage,
@@ -105,13 +135,31 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
 
       if (error) throw error;
 
-      setTaskChats(prev => ({
-        ...prev,
-        [currentTaskId]: [...(prev[currentTaskId] || []), { role: 'assistant', content: data.message }]
-      }));
+      // Add assistant message to UI
+      setAiMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+
+      // Save assistant message to database
+      const { error: saveAssistantError } = await supabase
+        .from('task_ai_messages')
+        .insert({
+          task_id: task.id,
+          role: 'assistant',
+          content: data.message
+        });
+
+      if (saveAssistantError) throw saveAssistantError;
+
     } catch (error) {
       console.error("Error calling AI assistant:", error);
       toast.error("Failed to get AI response");
+      // Reload messages from database to sync state
+      const { data } = await supabase
+        .from('task_ai_messages')
+        .select('role, content')
+        .eq('task_id', task.id)
+        .order('created_at', { ascending: true });
+      
+      if (data) setAiMessages(data as Array<{ role: 'user' | 'assistant'; content: string }>);
     } finally {
       setIsAiLoading(false);
     }
