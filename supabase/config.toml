@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.task-assistant]
 verify_jwt = true
+
+[functions.project-assistant]
+verify_jwt = true

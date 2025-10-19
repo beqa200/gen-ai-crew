@@ -12,6 +12,7 @@ import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye } from
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import { TaskDialog } from "@/components/TaskDialog";
+import ProjectChatWidget from "@/components/ProjectChatWidget";
 
 interface Project {
   id: string;
@@ -594,6 +595,8 @@ const Project = () => {
         allTasks={tasks}
         taskDependencies={taskDependencies}
       />
+
+      <ProjectChatWidget projectId={id!} />
     </div>
   );
 };

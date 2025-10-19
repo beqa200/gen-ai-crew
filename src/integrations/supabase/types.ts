@@ -70,6 +70,30 @@ export type Database = {
         }
         Relationships: []
       }
+      project_ai_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          project_id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          project_id: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          role?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           created_at: string
