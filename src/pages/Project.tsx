@@ -249,6 +249,22 @@ const Project = () => {
 
   const handleQuickStatusChange = async (taskId: string, newStatus: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Check if trying to complete a task with incomplete blockers
+    if (newStatus === "completed") {
+      const blockerTaskIds = taskDependencies
+        .filter(dep => dep.task_id === taskId)
+        .map(dep => dep.depends_on_task_id);
+      
+      const blockerTasks = tasks.filter(t => blockerTaskIds.includes(t.id));
+      const hasIncompleteBlockers = blockerTasks.some(t => t.status !== "completed");
+      
+      if (hasIncompleteBlockers) {
+        toast.error("Cannot complete task with incomplete dependencies");
+        return;
+      }
+    }
+    
     setUpdatingTaskId(taskId);
     
     try {

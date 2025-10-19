@@ -137,6 +137,12 @@ export function TaskDialog({
   const handleQuickStatusChange = async (newStatus: string) => {
     if (!task) return;
 
+    // Check if trying to complete a task with incomplete blockers
+    if (newStatus === "completed" && hasIncompleteBlockers) {
+      toast.error("Cannot complete task with incomplete dependencies. Complete the blocking tasks first.");
+      return;
+    }
+
     setIsUpdatingStatus(true);
     try {
       const { error } = await supabase
@@ -304,10 +310,16 @@ export function TaskDialog({
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50">
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem 
+                      value="completed" 
+                      disabled={hasIncompleteBlockers}
+                      className={hasIncompleteBlockers ? "opacity-50 cursor-not-allowed" : ""}
+                    >
+                      Completed {hasIncompleteBlockers && "(Blocked)"}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
