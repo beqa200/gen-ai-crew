@@ -22,7 +22,7 @@ const ProjectChatWidget = ({ projectId }: ProjectChatWidgetProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,8 +32,8 @@ const ProjectChatWidget = ({ projectId }: ProjectChatWidgetProps) => {
   }, [isOpen, projectId]);
 
   useEffect(() => {
-    if (scrollRef.current && isOpen) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen]);
 
@@ -165,7 +165,7 @@ const ProjectChatWidget = ({ projectId }: ProjectChatWidgetProps) => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          <ScrollArea className="flex-1 p-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -195,6 +195,7 @@ const ProjectChatWidget = ({ projectId }: ProjectChatWidgetProps) => {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </ScrollArea>
 
           {/* Input */}
