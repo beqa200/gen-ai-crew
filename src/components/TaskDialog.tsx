@@ -363,42 +363,58 @@ export function TaskDialog({
                 <h3 className="font-semibold">AI Assistant</h3>
               </div>
 
-              <ScrollArea className="flex-1 pr-4 mb-4">
-                <div className="space-y-4">
-                  {aiMessages.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      Ask me anything about this task! I can help break it down, suggest approaches, or answer
-                      questions.
-                    </p>
-                  ) : (
-                    aiMessages.map((msg, idx) => (
-                      <div key={idx} className={`p-3 rounded-lg ${msg.role === "user" ? "bg-primary/10" : "bg-muted"}`}>
-                        <p className="text-sm font-medium mb-1">{msg.role === "user" ? "You" : "AI Assistant"}</p>
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      </div>
-                    ))
-                  )}
-                  {isAiLoading && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Thinking...</span>
+              {hasIncompleteBlockers ? (
+                <div className="flex-1 flex items-center justify-center p-8 text-center">
+                  <div className="space-y-3 max-w-sm">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+                      <Bot className="w-6 h-6 text-muted-foreground" />
                     </div>
-                  )}
+                    <h4 className="font-semibold">AI Assistant Unavailable</h4>
+                    <p className="text-sm text-muted-foreground">
+                      This task is blocked by incomplete dependencies. Complete the blocking tasks first before using the AI assistant.
+                    </p>
+                  </div>
                 </div>
-              </ScrollArea>
+              ) : (
+                <>
+                  <ScrollArea className="flex-1 pr-4 mb-4">
+                    <div className="space-y-4">
+                      {aiMessages.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          Ask me anything about this task! I can help break it down, suggest approaches, or answer
+                          questions.
+                        </p>
+                      ) : (
+                        aiMessages.map((msg, idx) => (
+                          <div key={idx} className={`p-3 rounded-lg ${msg.role === "user" ? "bg-primary/10" : "bg-muted"}`}>
+                            <p className="text-sm font-medium mb-1">{msg.role === "user" ? "You" : "AI Assistant"}</p>
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                        ))
+                      )}
+                      {isAiLoading && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Thinking...</span>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
 
-              <div className="flex gap-2">
-                <Input
-                  value={aiInput}
-                  onChange={(e) => setAiInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAiMessage()}
-                  placeholder="Ask the AI assistant..."
-                  disabled={isAiLoading}
-                />
-                <Button onClick={handleAiMessage} disabled={isAiLoading || !aiInput.trim()} size="icon">
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAiMessage()}
+                      placeholder="Ask the AI assistant..."
+                      disabled={isAiLoading}
+                    />
+                    <Button onClick={handleAiMessage} disabled={isAiLoading || !aiInput.trim()} size="icon">
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
