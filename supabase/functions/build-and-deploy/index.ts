@@ -44,12 +44,12 @@ serve(async (req) => {
     console.log("Project found:", project.name);
 
     // Step 1: Generate/update website code using Claude
-    const existingCodeContext = project.project_code 
-      ? `\n\n=== EXISTING PROJECT CODE ===\n${project.project_code}\n\n=== CRITICAL INSTRUCTIONS ===\nThis project ALREADY EXISTS with working features. Your task is to ADD the new functionality described below while PRESERVING ALL EXISTING FEATURES.\n\nYou MUST:\n1. Keep 100% of existing HTML structure, styling, and functionality\n2. Add the new task's features alongside (not replacing) what exists\n3. Maintain all existing sections, navigation, interactions\n4. Integrate the new feature seamlessly into the existing design\n5. If there are conflicts, find a way to combine both features\n\nYou will fail if you remove or break ANY existing functionality.`
+    const existingCodeContext = project.project_code
+      ? `\n\nEXISTING PROJECT CODE:\n${project.project_code}\n\nYou MUST build upon this existing code. Add the new task's functionality to it. Keep all existing features and enhance the project.`
       : "";
 
     console.log(existingCodeContext ? "Updating existing project code..." : "Creating new project code...");
-    
+
     const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -63,10 +63,10 @@ serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: `You are ${project.project_code ? "UPDATING" : "building"} a web project called "${project.name}".
+            content: `You are building a web project called "${project.name}".
 Project Description: ${project.description || "No description provided"}
 
-${project.project_code ? "NEW TASK TO ADD:" : "TASK:"}
+Current Task:
 Title: ${taskTitle}
 Description: ${taskDescription}
 ${existingCodeContext}
@@ -75,9 +75,10 @@ Requirements:
 - Create a beautiful, modern, responsive design
 - Include inline CSS (Tailwind CDN is acceptable)
 - Include any necessary inline JavaScript
-- Make it fully self-contained in a single index.html file
+- Use some modern library - React.js or Next.js for example
 - Use modern design principles with good UX
 - Make it visually appealing and professional
+${project.project_code ? "- IMPORTANT: Integrate this new task INTO the existing code. Do not replace, but enhance and extend." : ""}
 
 Return ONLY the complete HTML code, no explanations or markdown formatting.`,
           },
