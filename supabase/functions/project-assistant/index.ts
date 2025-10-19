@@ -67,13 +67,21 @@ serve(async (req) => {
       },
       departments: departments?.map(d => ({
         name: d.name,
-        tasks: tasks?.filter(t => t.department_id === d.id).map(t => ({
-          title: t.title,
-          description: t.description,
-          status: t.status,
-          dependencies: dependencies?.filter(dep => dep.task_id === t.id).length || 0,
-          aiConversations: taskMessages?.filter(m => m.task_id === t.id).length || 0,
-        })),
+        tasks: tasks?.filter(t => t.department_id === d.id).map(t => {
+          const taskConversations = taskMessages?.filter(m => m.task_id === t.id) || [];
+          return {
+            title: t.title,
+            description: t.description,
+            status: t.status,
+            created_at: t.created_at,
+            dependencies: dependencies?.filter(dep => dep.task_id === t.id).length || 0,
+            aiConversationHistory: taskConversations.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+              created_at: msg.created_at
+            }))
+          };
+        }),
       })),
       statistics: {
         totalDepartments: departments?.length || 0,
@@ -89,9 +97,14 @@ serve(async (req) => {
 PROJECT CONTEXT:
 ${JSON.stringify(projectContext, null, 2)}
 
-Your role is to help the user understand their project, provide insights, answer questions about tasks and progress, and offer strategic advice. You have access to all project details including departments, tasks, their statuses, dependencies, and previous AI conversations.
+Your role is to help the user understand their project, provide insights, answer questions about tasks and progress, and offer strategic advice. You have access to all project details including:
+- Departments and their tasks
+- Task statuses, descriptions, and dependencies
+- Complete AI conversation histories for each task (stored in aiConversationHistory array for each task)
 
-Be concise, helpful, and proactive in offering insights about the project's progress and potential issues.`;
+When users ask about task conversations or discussions, refer to the aiConversationHistory field which contains the full chat history between users and the task-level AI assistant.
+
+Be concise, helpful, and proactive in offering insights about the project's progress, potential issues, and patterns you notice in the task conversations.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
