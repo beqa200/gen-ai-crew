@@ -83,10 +83,10 @@ IMPORTANT: Dependencies are 0-indexed positions within each department's task li
                             dependsOn: { 
                               type: "array",
                               items: { type: "number" },
-                              description: "Array of task indexes (0-based) within this department that this task depends on"
+                              description: "Array of task indexes (0-based) within this department that this task depends on. Use empty array [] if no dependencies."
                             }
                           },
-                          required: ["title", "description"],
+                          required: ["title", "description", "dependsOn"],
                           additionalProperties: false
                         },
                         minItems: 5,
