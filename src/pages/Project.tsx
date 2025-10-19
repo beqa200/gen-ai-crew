@@ -62,6 +62,61 @@ const Project = () => {
     loadDepartments();
     loadTasks();
     loadTaskDependencies();
+
+    // Set up realtime subscriptions for live updates
+    const tasksChannel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks'
+        },
+        () => {
+          console.log('Tasks changed, reloading...');
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    const depsChannel = supabase
+      .channel('deps-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'task_dependencies'
+        },
+        () => {
+          console.log('Dependencies changed, reloading...');
+          loadTaskDependencies();
+        }
+      )
+      .subscribe();
+
+    const deptsChannel = supabase
+      .channel('depts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'departments'
+        },
+        () => {
+          console.log('Departments changed, reloading...');
+          loadDepartments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(depsChannel);
+      supabase.removeChannel(deptsChannel);
+    };
   }, [id]);
 
   const loadProject = async () => {

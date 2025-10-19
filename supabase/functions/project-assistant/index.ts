@@ -92,19 +92,98 @@ serve(async (req) => {
       }
     };
 
-    const systemPrompt = `You are a helpful AI assistant for the project "${project?.name}".
+    const systemPrompt = `You are a powerful AI assistant for the project "${project?.name}".
 
 PROJECT CONTEXT:
 ${JSON.stringify(projectContext, null, 2)}
 
-Your role is to help the user understand their project, provide insights, answer questions about tasks and progress, and offer strategic advice. You have access to all project details including:
-- Departments and their tasks
-- Task statuses, descriptions, and dependencies
-- Complete AI conversation histories for each task (stored in aiConversationHistory array for each task)
+Your role is to help manage this project completely. You can:
+- Create, update, and delete tasks
+- Change task statuses
+- Add or remove task dependencies
+- Provide insights and analysis
 
-When users ask about task conversations or discussions, refer to the aiConversationHistory field which contains the full chat history between users and the task-level AI assistant.
+You have access to all project details including departments, tasks, statuses, dependencies, and complete AI conversation histories for each task.
 
-Be concise, helpful, and proactive in offering insights about the project's progress, potential issues, and patterns you notice in the task conversations.`;
+When users ask you to make changes, use the available tools to execute them immediately. Be proactive and helpful.`;
+
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "create_task",
+          description: "Create a new task in a department",
+          parameters: {
+            type: "object",
+            properties: {
+              department_name: { type: "string", description: "Name of the department" },
+              title: { type: "string", description: "Task title" },
+              description: { type: "string", description: "Task description" }
+            },
+            required: ["department_name", "title", "description"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "delete_task",
+          description: "Delete a task by its title",
+          parameters: {
+            type: "object",
+            properties: {
+              task_title: { type: "string", description: "Title of the task to delete" }
+            },
+            required: ["task_title"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "update_task_status",
+          description: "Update the status of a task",
+          parameters: {
+            type: "object",
+            properties: {
+              task_title: { type: "string", description: "Title of the task" },
+              status: { type: "string", enum: ["pending", "in_progress", "completed"], description: "New status" }
+            },
+            required: ["task_title", "status"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "add_dependency",
+          description: "Add a dependency between tasks (task A depends on task B)",
+          parameters: {
+            type: "object",
+            properties: {
+              task_title: { type: "string", description: "Title of the task that has the dependency" },
+              depends_on_title: { type: "string", description: "Title of the task it depends on" }
+            },
+            required: ["task_title", "depends_on_title"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "remove_dependency",
+          description: "Remove a dependency between tasks",
+          parameters: {
+            type: "object",
+            properties: {
+              task_title: { type: "string", description: "Title of the task" },
+              depends_on_title: { type: "string", description: "Title of the task it depends on" }
+            },
+            required: ["task_title", "depends_on_title"]
+          }
+        }
+      }
+    ];
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -112,7 +191,7 @@ Be concise, helpful, and proactive in offering insights about the project's prog
       { role: "user", content: message }
     ];
 
-    console.log('Sending request to AI with project context');
+    console.log('Sending request to AI with project context and tools');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -123,6 +202,8 @@ Be concise, helpful, and proactive in offering insights about the project's prog
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: messages,
+        tools: tools,
+        tool_choice: 'auto'
       }),
     });
 
@@ -141,7 +222,158 @@ Be concise, helpful, and proactive in offering insights about the project's prog
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    const choice = data.choices[0];
+    
+    // Handle tool calls
+    if (choice.message.tool_calls) {
+      console.log('AI requested tool calls:', JSON.stringify(choice.message.tool_calls));
+      
+      const toolResults = [];
+      for (const toolCall of choice.message.tool_calls) {
+        const functionName = toolCall.function.name;
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        let result;
+        try {
+          switch (functionName) {
+            case 'create_task': {
+              const dept = departments?.find(d => d.name === args.department_name);
+              if (!dept) {
+                result = { error: `Department "${args.department_name}" not found` };
+              } else {
+                const { data: newTask, error } = await supabaseClient
+                  .from('tasks')
+                  .insert({
+                    department_id: dept.id,
+                    title: args.title,
+                    description: args.description,
+                    status: 'pending'
+                  })
+                  .select()
+                  .single();
+                result = error ? { error: error.message } : { success: true, task: newTask };
+              }
+              break;
+            }
+            
+            case 'delete_task': {
+              const task = tasks?.find(t => t.title === args.task_title);
+              if (!task) {
+                result = { error: `Task "${args.task_title}" not found` };
+              } else {
+                // Delete dependencies first
+                await supabaseClient
+                  .from('task_dependencies')
+                  .delete()
+                  .or(`task_id.eq.${task.id},depends_on_task_id.eq.${task.id}`);
+                
+                const { error } = await supabaseClient
+                  .from('tasks')
+                  .delete()
+                  .eq('id', task.id);
+                result = error ? { error: error.message } : { success: true };
+              }
+              break;
+            }
+            
+            case 'update_task_status': {
+              const task = tasks?.find(t => t.title === args.task_title);
+              if (!task) {
+                result = { error: `Task "${args.task_title}" not found` };
+              } else {
+                const { error } = await supabaseClient
+                  .from('tasks')
+                  .update({ status: args.status })
+                  .eq('id', task.id);
+                result = error ? { error: error.message } : { success: true };
+              }
+              break;
+            }
+            
+            case 'add_dependency': {
+              const task = tasks?.find(t => t.title === args.task_title);
+              const dependsOnTask = tasks?.find(t => t.title === args.depends_on_title);
+              if (!task) {
+                result = { error: `Task "${args.task_title}" not found` };
+              } else if (!dependsOnTask) {
+                result = { error: `Task "${args.depends_on_title}" not found` };
+              } else {
+                const { error } = await supabaseClient
+                  .from('task_dependencies')
+                  .insert({
+                    task_id: task.id,
+                    depends_on_task_id: dependsOnTask.id
+                  });
+                result = error ? { error: error.message } : { success: true };
+              }
+              break;
+            }
+            
+            case 'remove_dependency': {
+              const task = tasks?.find(t => t.title === args.task_title);
+              const dependsOnTask = tasks?.find(t => t.title === args.depends_on_title);
+              if (!task || !dependsOnTask) {
+                result = { error: 'Task not found' };
+              } else {
+                const { error } = await supabaseClient
+                  .from('task_dependencies')
+                  .delete()
+                  .eq('task_id', task.id)
+                  .eq('depends_on_task_id', dependsOnTask.id);
+                result = error ? { error: error.message } : { success: true };
+              }
+              break;
+            }
+            
+            default:
+              result = { error: 'Unknown function' };
+          }
+        } catch (err) {
+          result = { error: err instanceof Error ? err.message : 'Unknown error' };
+        }
+        
+        toolResults.push({
+          tool_call_id: toolCall.id,
+          role: "tool",
+          name: functionName,
+          content: JSON.stringify(result)
+        });
+      }
+      
+      // Send tool results back to AI for final response
+      const followUpMessages = [
+        ...messages,
+        choice.message,
+        ...toolResults
+      ];
+      
+      const followUpResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: followUpMessages,
+        }),
+      });
+      
+      if (!followUpResponse.ok) {
+        throw new Error('Failed to get follow-up AI response');
+      }
+      
+      const followUpData = await followUpResponse.json();
+      const finalResponse = followUpData.choices[0].message.content;
+      
+      return new Response(
+        JSON.stringify({ response: finalResponse }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // No tool calls, return direct response
+    const aiResponse = choice.message.content;
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
