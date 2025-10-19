@@ -19,6 +19,9 @@ interface Project {
   id: string;
   name: string;
   description: string | null;
+  deployed_url?: string | null;
+  project_code?: string | null;
+  vercel_project_id?: string | null;
 }
 
 interface Department {
@@ -403,15 +406,17 @@ const Project = () => {
         body: { 
           taskId: taskToStart.id,
           taskTitle: taskToStart.title,
-          taskDescription: taskToStart.description
+          taskDescription: taskToStart.description,
+          projectId: id
         }
       });
 
       if (error) throw error;
 
       if (data?.success) {
-        toast.success(`Website deployed! View at: ${data.deployedUrl}`);
+        toast.success(`Project updated and deployed successfully!`);
         await loadTasks();
+        await loadProject(); // Reload project to get the deployed URL
       } else {
         throw new Error(data?.error || 'Deployment failed');
       }
@@ -473,7 +478,17 @@ const Project = () => {
             </Button>
             <Logo iconSize={24} textSize="text-xl" />
           </div>
-          <div className="text-right">
+          <div className="flex items-center gap-4">
+            {project.deployed_url && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => window.open(project.deployed_url!, "_blank")}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Live Project
+              </Button>
+            )}
             <h1 className="font-semibold">{project.name}</h1>
           </div>
         </div>

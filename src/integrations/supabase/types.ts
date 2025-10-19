@@ -97,27 +97,36 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
+          deployed_url: string | null
           description: string | null
           id: string
           name: string
+          project_code: string | null
           updated_at: string
           user_id: string
+          vercel_project_id: string | null
         }
         Insert: {
           created_at?: string
+          deployed_url?: string | null
           description?: string | null
           id?: string
           name: string
+          project_code?: string | null
           updated_at?: string
           user_id: string
+          vercel_project_id?: string | null
         }
         Update: {
           created_at?: string
+          deployed_url?: string | null
           description?: string | null
           id?: string
           name?: string
+          project_code?: string | null
           updated_at?: string
           user_id?: string
+          vercel_project_id?: string | null
         }
         Relationships: []
       }

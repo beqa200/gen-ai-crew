@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { taskId, taskTitle, taskDescription } = await req.json();
+    const { taskId, taskTitle, taskDescription, projectId } = await req.json();
 
     console.log("Starting build and deploy for task:", taskId);
 
@@ -29,8 +29,27 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Step 1: Generate website code using Claude
-    console.log("Calling Claude API to generate website code...");
+    // Fetch project details to get existing code
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("project_code, deployed_url, vercel_project_id, name, description")
+      .eq("id", projectId)
+      .single();
+
+    if (projectError) {
+      console.error("Error fetching project:", projectError);
+      throw projectError;
+    }
+
+    console.log("Project found:", project.name);
+
+    // Step 1: Generate/update website code using Claude
+    const existingCodeContext = project.project_code 
+      ? `\n\nEXISTING PROJECT CODE:\n${project.project_code}\n\nYou MUST build upon this existing code. Add the new task's functionality to it. Keep all existing features and enhance the project.`
+      : "";
+
+    console.log(existingCodeContext ? "Updating existing project code..." : "Creating new project code...");
+    
     const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -44,18 +63,22 @@ serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: `Create a complete, production-ready website with modern technologies (React.js or Next.js for example) for the following task:
+            content: `You are building a web project called "${project.name}".
+Project Description: ${project.description || "No description provided"}
 
+Current Task:
 Title: ${taskTitle}
 Description: ${taskDescription}
+${existingCodeContext}
 
 Requirements:
 - Create a beautiful, modern, responsive design
-- Include inline CSS (Tailwind CDN is acceptable) 
+- Include inline CSS (Tailwind CDN is acceptable)
 - Include any necessary inline JavaScript
 - Make it fully self-contained in a single index.html file
 - Use modern design principles with good UX
 - Make it visually appealing and professional
+${project.project_code ? "- IMPORTANT: Integrate this new task INTO the existing code. Do not replace, but enhance and extend." : ""}
 
 Return ONLY the complete HTML code, no explanations or markdown formatting.`,
           },
@@ -77,9 +100,12 @@ Return ONLY the complete HTML code, no explanations or markdown formatting.`,
     // Step 2: Deploy to Vercel
     console.log("Deploying to Vercel...");
 
+    // Use existing project name or create new one
+    const projectName = project.vercel_project_id || `project-${projectId.slice(0, 8)}`;
+
     // Create deployment payload
     const deploymentPayload = {
-      name: `task-${taskId.slice(0, 8)}`,
+      name: projectName,
       files: [
         {
           file: "index.html",
@@ -111,7 +137,22 @@ Return ONLY the complete HTML code, no explanations or markdown formatting.`,
 
     console.log("Deployed successfully:", deployedUrl);
 
-    // Step 3: Update task with deployed URL
+    // Step 3: Update project with code and deployment info
+    const { error: projectUpdateError } = await supabase
+      .from("projects")
+      .update({
+        project_code: generatedHtml,
+        deployed_url: deployedUrl,
+        vercel_project_id: projectName,
+      })
+      .eq("id", projectId);
+
+    if (projectUpdateError) {
+      console.error("Error updating project:", projectUpdateError);
+      throw projectUpdateError;
+    }
+
+    // Step 4: Update task status and URL
     const { error: updateError } = await supabase
       .from("tasks")
       .update({
