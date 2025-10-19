@@ -28,6 +28,12 @@ interface Task {
   created_at: string;
 }
 
+interface TaskDependency {
+  id: string;
+  task_id: string;
+  depends_on_task_id: string;
+}
+
 interface TaskDialogProps {
   task: Task | null;
   open: boolean;
@@ -37,6 +43,8 @@ interface TaskDialogProps {
   projectDescription?: string;
   projectName?: string;
   allDepartments?: Array<{ id: string; name: string }>;
+  allTasks?: Task[];
+  taskDependencies?: TaskDependency[];
 }
 
 export function TaskDialog({
@@ -48,6 +56,8 @@ export function TaskDialog({
   projectDescription,
   projectName,
   allDepartments,
+  allTasks = [],
+  taskDependencies = [],
 }: TaskDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -137,7 +147,13 @@ export function TaskDialog({
 
       if (saveUserError) throw saveUserError;
 
-      // Get AI response with chat history
+      // Get blocker tasks (incomplete dependencies)
+      const blockers = taskDependencies
+        .filter(dep => dep.task_id === task.id)
+        .map(dep => allTasks.find(t => t.id === dep.depends_on_task_id))
+        .filter(t => t && t.status !== "completed");
+
+      // Get AI response with chat history and blocker info
       const { data, error } = await supabase.functions.invoke("task-assistant", {
         body: {
           message: userMessage,
@@ -149,6 +165,10 @@ export function TaskDialog({
             projectDescription: projectDescription,
             projectName: projectName,
             allDepartments: allDepartments?.map((d) => d.name),
+            blockers: blockers.map(b => ({
+              title: b?.title,
+              status: b?.status,
+            })),
           },
           chatHistory: aiMessages,
         },
@@ -209,6 +229,14 @@ export function TaskDialog({
   if (!task && !editedTask) return null;
 
   const displayTask = editedTask || task;
+
+  // Get blocker tasks for this task
+  const blockerTaskIds = taskDependencies
+    .filter(dep => dep.task_id === displayTask?.id)
+    .map(dep => dep.depends_on_task_id);
+  
+  const blockerTasks = allTasks.filter(t => blockerTaskIds.includes(t.id));
+  const hasIncompleteBlockers = blockerTasks.some(t => t.status !== "completed");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -289,6 +317,29 @@ export function TaskDialog({
                   </p>
                 )}
               </div>
+
+              {!isEditing && blockerTasks.length > 0 && (
+                <div className="space-y-2 pt-4 border-t">
+                  <Label>Blocked By</Label>
+                  <div className="space-y-2">
+                    {blockerTasks.map(blocker => (
+                      <div key={blocker.id} className="flex items-center justify-between p-2 rounded-lg border bg-muted/30">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{blocker.title}</span>
+                        </div>
+                        <Badge className={getStatusColor(blocker.status)}>
+                          {getStatusLabel(blocker.status)}
+                        </Badge>
+                      </div>
+                    ))}
+                    {hasIncompleteBlockers && (
+                      <p className="text-xs text-muted-foreground">
+                        ⚠️ This task is blocked by incomplete tasks. Complete the blockers first.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {!isEditing && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground pt-4 border-t">

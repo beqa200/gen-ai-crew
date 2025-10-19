@@ -35,6 +35,12 @@ interface Task {
   created_at: string;
 }
 
+interface TaskDependency {
+  id: string;
+  task_id: string;
+  depends_on_task_id: string;
+}
+
 const Project = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -47,11 +53,13 @@ const Project = () => {
   const [tasksGenerated, setTasksGenerated] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [taskDependencies, setTaskDependencies] = useState<TaskDependency[]>([]);
 
   useEffect(() => {
     loadProject();
     loadDepartments();
     loadTasks();
+    loadTaskDependencies();
   }, [id]);
 
   const loadProject = async () => {
@@ -113,6 +121,38 @@ const Project = () => {
       setTasks(data || []);
     } catch (error) {
       console.error("Error loading tasks:", error);
+    }
+  };
+
+  const loadTaskDependencies = async () => {
+    try {
+      const { data: deptData } = await supabase
+        .from("departments")
+        .select("id")
+        .eq("project_id", id);
+
+      if (!deptData || deptData.length === 0) return;
+
+      const departmentIds = deptData.map(d => d.id);
+
+      const { data: taskData } = await supabase
+        .from("tasks")
+        .select("id")
+        .in("department_id", departmentIds);
+
+      if (!taskData || taskData.length === 0) return;
+
+      const taskIds = taskData.map(t => t.id);
+
+      const { data, error } = await supabase
+        .from("task_dependencies")
+        .select("*")
+        .in("task_id", taskIds);
+
+      if (error) throw error;
+      setTaskDependencies(data || []);
+    } catch (error) {
+      console.error("Error loading task dependencies:", error);
     }
   };
 
@@ -203,6 +243,7 @@ const Project = () => {
 
   const handleTaskUpdate = async () => {
     await loadTasks();
+    await loadTaskDependencies();
   };
 
   return (
@@ -448,6 +489,8 @@ const Project = () => {
         projectDescription={project.description || undefined}
         projectName={project.name}
         allDepartments={departments}
+        allTasks={tasks}
+        taskDependencies={taskDependencies}
       />
     </div>
   );

@@ -20,6 +20,12 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Check if task has incomplete blockers
+    const hasBlockers = taskContext.blockers && taskContext.blockers.length > 0;
+    const blockersList = hasBlockers 
+      ? taskContext.blockers.map((b: any) => `  - "${b.title}" (Status: ${b.status})`).join('\n')
+      : '';
+
     const systemPrompt = `You are a helpful AI assistant for a task management system helping with a startup project.
 
 PROJECT: ${taskContext.projectName || 'Untitled Project'}
@@ -31,6 +37,12 @@ CURRENT TASK YOU'RE HELPING WITH:
 - Status: ${taskContext.status}
 - Department: ${taskContext.departmentName || 'Unknown'}
 
+${hasBlockers ? `⚠️ CRITICAL - TASK IS BLOCKED:
+This task depends on the following incomplete tasks. The user CANNOT start this task until these blockers are completed:
+${blockersList}
+
+You MUST inform the user that this task is blocked and they need to complete the blocker tasks first. Do not provide detailed help on this task until the blockers are resolved. Instead, guide them to focus on the blocking tasks.
+` : ''}
 IMPORTANT CONTEXT:
 - You have full access to the conversation history
 - When users ask about previous messages, refer to the chat history
@@ -38,6 +50,8 @@ IMPORTANT CONTEXT:
 - Consider how this task fits into the overall project goals and other departments
 
 YOUR ROLE:
+${hasBlockers ? '- FIRST: Alert the user that this task is blocked by incomplete dependencies' : ''}
+${hasBlockers ? '- Suggest they complete the blocker tasks before starting this one' : ''}
 - Break down this task into actionable steps
 - Suggest improvements that align with the overall project vision
 - Answer questions about this task in the context of the full startup project
