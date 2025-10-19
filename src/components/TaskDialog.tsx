@@ -271,35 +271,15 @@ export function TaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <DialogTitle className="text-2xl">{isEditing ? "Edit Task" : displayTask?.title}</DialogTitle>
-              <DialogDescription>
-                {departmentName && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <Tag className="w-4 h-4" />
-                    <span>{departmentName}</span>
-                  </div>
-                )}
-              </DialogDescription>
-            </div>
-            {!isEditing && (
-              <Select 
-                value={displayTask?.status} 
-                onValueChange={handleQuickStatusChange}
-                disabled={isUpdatingStatus}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
+          <DialogTitle className="text-2xl">{isEditing ? "Edit Task" : displayTask?.title}</DialogTitle>
+          <DialogDescription>
+            {departmentName && (
+              <div className="flex items-center gap-2 mt-2">
+                <Tag className="w-4 h-4" />
+                <span>{departmentName}</span>
+              </div>
             )}
-          </div>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-4 flex-1 overflow-hidden">
@@ -307,6 +287,29 @@ export function TaskDialog({
             {displayTask?.image_url && (
               <div className="w-full h-64 rounded-lg overflow-hidden">
                 <img src={displayTask.image_url} alt={displayTask.title} className="w-full h-full object-cover" />
+              </div>
+            )}
+
+            {!isEditing && (
+              <div className="flex items-center gap-3 p-4 rounded-lg border bg-muted/30">
+                <div className="flex-1">
+                  <Label className="text-sm text-muted-foreground mb-1">Status</Label>
+                  <p className="text-sm font-medium">{getStatusLabel(displayTask?.status || "pending")}</p>
+                </div>
+                <Select 
+                  value={displayTask?.status} 
+                  onValueChange={handleQuickStatusChange}
+                  disabled={isUpdatingStatus}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
