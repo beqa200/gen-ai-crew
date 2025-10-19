@@ -28,9 +28,11 @@ interface TaskDialogProps {
   onTaskUpdate: () => void;
   departmentName?: string;
   projectDescription?: string;
+  projectName?: string;
+  allDepartments?: Array<{ id: string; name: string }>;
 }
 
-export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentName, projectDescription }: TaskDialogProps) {
+export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentName, projectDescription, projectName, allDepartments }: TaskDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedTask, setEditedTask] = useState<Task | null>(task);
@@ -130,7 +132,9 @@ export function TaskDialog({ task, open, onOpenChange, onTaskUpdate, departmentN
             description: displayTask.description,
             status: displayTask.status,
             departmentName: departmentName,
-            projectDescription: projectDescription
+            projectDescription: projectDescription,
+            projectName: projectName,
+            allDepartments: allDepartments?.map(d => d.name)
           },
           chatHistory: aiMessages
         }

@@ -449,6 +449,8 @@ const Project = () => {
           : undefined
         }
         projectDescription={project.description || undefined}
+        projectName={project.name}
+        allDepartments={departments}
       />
     </div>
   );
