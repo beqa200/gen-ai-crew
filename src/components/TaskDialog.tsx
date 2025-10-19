@@ -423,7 +423,7 @@ export function TaskDialog({
                 </div>
               ) : (
                 <>
-                  <ScrollArea className="flex-1 pr-4 mb-4">
+                  <ScrollArea className="flex-1 pr-4 mb-2">
                     <div className="space-y-4">
                       {aiMessages.length === 0 ? (
                         <p className="text-sm text-muted-foreground">
