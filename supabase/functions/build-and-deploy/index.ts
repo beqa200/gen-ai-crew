@@ -59,11 +59,12 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
-        max_tokens: 4000,
+        max_tokens: 16000,
         messages: [
           {
             role: "user",
-            content: `You are building a web project called "${project.name}".
+            content: `You are an expert full-stack developer building a production-ready web project called "${project.name}".
+
 Project Description: ${project.description || "No description provided"}
 
 Current Task:
@@ -71,16 +72,40 @@ Title: ${taskTitle}
 Description: ${taskDescription}
 ${existingCodeContext}
 
-Requirements:
-- Create a beautiful, modern, responsive design
-- Include inline CSS (Tailwind CDN is acceptable)
-- Include any necessary inline JavaScript
-- Use some modern library - React.js or Next.js for example
-- Use modern design principles with good UX
-- Make it visually appealing and professional
-${project.project_code ? "- IMPORTANT: Integrate this new task INTO the existing code. Do not replace, but enhance and extend." : ""}
+CRITICAL REQUIREMENTS - YOU MUST IMPLEMENT ALL OF THESE:
 
-Return ONLY the complete HTML code, no explanations or markdown formatting.`,
+1. **Complete Implementation**: Implement EVERY SINGLE feature, functionality, and requirement mentioned in the task description above. Do not skip anything or create placeholder comments like "// Add feature here". Write the actual working code for everything.
+
+2. **Technical Excellence**:
+   - Write production-ready, fully functional code
+   - Include all necessary logic, state management, and data handling
+   - Implement proper error handling and edge cases
+   - Add form validation where needed
+   - Make all interactive elements actually work
+
+3. **Design Quality**:
+   - Create a stunning, modern, professional design
+   - Use Tailwind CDN for styling
+   - Ensure fully responsive layout (mobile, tablet, desktop)
+   - Add smooth animations and transitions
+   - Use a cohesive color scheme and typography
+
+4. **Code Structure**:
+   - Use React with functional components and hooks
+   - Include all necessary state management
+   - Write clean, organized, well-commented code
+   - Import and use any necessary libraries via CDN
+
+5. **Integration with Existing Code** (if applicable):
+   ${project.project_code ? "- CRITICAL: You MUST preserve ALL existing features and functionality from the existing code\n   - Add the new task's features alongside existing features, do not replace anything\n   - Maintain all existing UI elements, components, and logic\n   - Ensure the new features integrate seamlessly with existing features\n   - If there are navigation elements, add the new feature to the navigation" : "- This is a new project, build a complete standalone application"}
+
+6. **Completeness Check**:
+   - Re-read the task description before finishing
+   - Verify you've implemented every feature mentioned
+   - Ensure nothing is left as TODO or placeholder
+   - Make sure all buttons, forms, and interactions are fully functional
+
+Return ONLY the complete, production-ready HTML code with inline React and Tailwind. No explanations, no markdown formatting, just the raw HTML file.`,
           },
         ],
       }),
