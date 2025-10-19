@@ -182,6 +182,21 @@ When users ask you to make changes, use the available tools to execute them imme
             required: ["task_title", "depends_on_title"]
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "update_task_name",
+          description: "Update the name/title of a task",
+          parameters: {
+            type: "object",
+            properties: {
+              old_title: { type: "string", description: "Current title of the task" },
+              new_title: { type: "string", description: "New title for the task" }
+            },
+            required: ["old_title", "new_title"]
+          }
+        }
       }
     ];
 
@@ -320,6 +335,20 @@ When users ask you to make changes, use the available tools to execute them imme
                   .delete()
                   .eq('task_id', task.id)
                   .eq('depends_on_task_id', dependsOnTask.id);
+                result = error ? { error: error.message } : { success: true };
+              }
+              break;
+            }
+            
+            case 'update_task_name': {
+              const task = tasks?.find(t => t.title === args.old_title);
+              if (!task) {
+                result = { error: `Task "${args.old_title}" not found` };
+              } else {
+                const { error } = await supabaseClient
+                  .from('tasks')
+                  .update({ title: args.new_title })
+                  .eq('id', task.id);
                 result = error ? { error: error.message } : { success: true };
               }
               break;
