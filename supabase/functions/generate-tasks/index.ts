@@ -62,27 +62,10 @@ Tasks should cover: Value proposition, landing page, early adopter outreach, con
 
 ## TASK FORMAT
 - **Title**: Action-oriented, specific (e.g., "Build user authentication with Google OAuth" not "Setup auth")
-- **Description**: 100-200 words with HIGHLY DETAILED technical specifications. Must include:
-  * Exact features and functionality to implement
-  * Specific UI/UX requirements (layout, components, interactions)
-  * Technical implementation details (APIs, libraries, methods to use)
-  * Data structures and database schema if applicable
-  * User flows and edge cases to handle
-  * Specific design patterns or architectures to follow
-  Write as if directly instructing Claude AI on exactly what to build - be explicit, technical, and comprehensive so the AI can implement without ambiguity.
+- **Description**: 75-150 words covering detailed and technical description of the task so that then Calude AI can identify the task and build the appropriate product according that task.
 - **Dependencies**: Array of 0-based indexes within SAME department (e.g., [0,1] means depends on tasks at index 0 and 1)
 
-## CREATIVE INTELLIGENCE
-If idea is incomplete, make intelligent assumptions:
-- "fitness app" → Mobile app with workout tracking, social features, progress visualization, gamification, subscription model
-- "e-commerce" → Marketplace with user accounts, payment integration, inventory management, seller dashboard, reviews
-- "SaaS tool" → Web app with freemium model, OAuth, dashboard, API, analytics, team collaboration
 
-## DEPENDENCY STRATEGY
-Create realistic dependency chains:
-- User research → Feature specs → Development → Testing
-- Brand strategy → Landing page → Marketing campaigns
-- Architecture decisions → Database setup → API development
 
 CRITICAL: Generate startup-ready, detailed tasks that a founder could execute TODAY. Every task should move the needle toward launch and revenue.`;
 
