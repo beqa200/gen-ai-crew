@@ -54,6 +54,7 @@ const Project = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [taskDependencies, setTaskDependencies] = useState<TaskDependency[]>([]);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProject();
@@ -246,6 +247,28 @@ const Project = () => {
     await loadTaskDependencies();
   };
 
+  const handleQuickStatusChange = async (taskId: string, newStatus: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setUpdatingTaskId(taskId);
+    
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ status: newStatus })
+        .eq("id", taskId);
+
+      if (error) throw error;
+
+      toast.success("Status updated");
+      await loadTasks();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-hero">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
@@ -433,7 +456,7 @@ const Project = () => {
                                 <TableHead>Task</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="max-w-md">Description</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className="text-right">Quick Actions</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -451,16 +474,44 @@ const Project = () => {
                                   </TableCell>
                                   <TableCell className="max-w-md truncate">{task.description}</TableCell>
                                   <TableCell className="text-right">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleTaskClick(task);
-                                      }}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
+                                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                      {task.status !== "in_progress" && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => handleQuickStatusChange(task.id, "in_progress", e)}
+                                          disabled={updatingTaskId === task.id}
+                                          className="h-8 px-2"
+                                        >
+                                          <Loader2 className="w-3 h-3 mr-1" />
+                                          Start
+                                        </Button>
+                                      )}
+                                      {task.status !== "completed" && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => handleQuickStatusChange(task.id, "completed", e)}
+                                          disabled={updatingTaskId === task.id}
+                                          className="h-8 px-2"
+                                        >
+                                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                                          Complete
+                                        </Button>
+                                      )}
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleTaskClick(task);
+                                        }}
+                                        className="h-8 px-2"
+                                      >
+                                        <Eye className="w-3 h-3 mr-1" />
+                                        View
+                                      </Button>
+                                    </div>
                                   </TableCell>
                                 </TableRow>
                               ))}

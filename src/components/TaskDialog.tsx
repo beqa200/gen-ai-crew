@@ -66,6 +66,7 @@ export function TaskDialog({
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [aiInput, setAiInput] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Update editedTask when task prop changes
   useEffect(() => {
@@ -130,6 +131,28 @@ export function TaskDialog({
       toast.error("Failed to update task");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleQuickStatusChange = async (newStatus: string) => {
+    if (!task) return;
+
+    setIsUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ status: newStatus })
+        .eq("id", task.id);
+
+      if (error) throw error;
+
+      toast.success("Status updated successfully");
+      onTaskUpdate();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -248,15 +271,35 @@ export function TaskDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-2xl">{isEditing ? "Edit Task" : "Task Details"}</DialogTitle>
-          <DialogDescription>
-            {departmentName && (
-              <div className="flex items-center gap-2 mt-2">
-                <Tag className="w-4 h-4" />
-                <span>{departmentName}</span>
-              </div>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <DialogTitle className="text-2xl">{isEditing ? "Edit Task" : displayTask?.title}</DialogTitle>
+              <DialogDescription>
+                {departmentName && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Tag className="w-4 h-4" />
+                    <span>{departmentName}</span>
+                  </div>
+                )}
+              </DialogDescription>
+            </div>
+            {!isEditing && (
+              <Select 
+                value={displayTask?.status} 
+                onValueChange={handleQuickStatusChange}
+                disabled={isUpdatingStatus}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
             )}
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
         <div className="flex gap-4 flex-1 overflow-hidden">
@@ -268,23 +311,21 @@ export function TaskDialog({
             )}
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                {isEditing ? (
+              {isEditing && (
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
                   <Input
                     id="title"
                     value={editedTask?.title || ""}
                     onChange={(e) => setEditedTask(editedTask ? { ...editedTask, title: e.target.value } : null)}
                     placeholder="Task title"
                   />
-                ) : (
-                  <h3 className="text-xl font-semibold">{displayTask?.title}</h3>
-                )}
-              </div>
+                </div>
+              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                {isEditing ? (
+              {isEditing && (
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
                   <Select
                     value={editedTask?.status || "pending"}
                     onValueChange={(value) => setEditedTask(editedTask ? { ...editedTask, status: value } : null)}
@@ -298,14 +339,8 @@ export function TaskDialog({
                       <SelectItem value="completed">Completed</SelectItem>
                     </SelectContent>
                   </Select>
-                ) : (
-                  <div className="pt-1">
-                    <Badge className={getStatusColor(displayTask?.status || "pending")}>
-                      {getStatusLabel(displayTask?.status || "pending")}
-                    </Badge>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
