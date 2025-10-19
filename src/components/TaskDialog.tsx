@@ -67,6 +67,12 @@ export function TaskDialog({
   const [aiInput, setAiInput] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
 
+  // Update editedTask when task prop changes
+  useEffect(() => {
+    setEditedTask(task);
+    setIsEditing(false);
+  }, [task]);
+
   // Load AI chat history when task changes
   useEffect(() => {
     const loadChatHistory = async () => {
