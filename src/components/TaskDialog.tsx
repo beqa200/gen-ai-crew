@@ -137,9 +137,9 @@ export function TaskDialog({
   const handleQuickStatusChange = async (newStatus: string) => {
     if (!task) return;
 
-    // Check if trying to complete a task with incomplete blockers
-    if (newStatus === "completed" && hasIncompleteBlockers) {
-      toast.error("Cannot complete task with incomplete dependencies. Complete the blocking tasks first.");
+    // Check if trying to change status with incomplete blockers
+    if ((newStatus === "completed" || newStatus === "in_progress") && hasIncompleteBlockers) {
+      toast.error("Cannot start or complete task with incomplete dependencies. Complete the blocking tasks first.");
       return;
     }
 
@@ -152,6 +152,9 @@ export function TaskDialog({
 
       if (error) throw error;
 
+      // Update local state immediately
+      setEditedTask(prev => prev ? { ...prev, status: newStatus } : null);
+      
       toast.success("Status updated successfully");
       onTaskUpdate();
     } catch (error) {
@@ -312,7 +315,12 @@ export function TaskDialog({
                   </SelectTrigger>
                   <SelectContent className="z-50">
                     <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem 
+                      value="in_progress"
+                      disabled={hasIncompleteBlockers}
+                    >
+                      In Progress
+                    </SelectItem>
                     <SelectItem 
                       value="completed" 
                       disabled={hasIncompleteBlockers}
