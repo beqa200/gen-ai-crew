@@ -732,7 +732,7 @@ const Project = () => {
                                 >
                                   <TableCell className="font-medium">{task.title}</TableCell>
                                   <TableCell>
-                                    <Badge className={getStatusColor(task.status)}>
+                                    <Badge className={`${getStatusColor(task.status)} whitespace-nowrap`}>
                                       {getStatusLabel(task.status)}
                                     </Badge>
                                   </TableCell>
@@ -744,7 +744,7 @@ const Project = () => {
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         onClick={(e) => e.stopPropagation()}
-                                        className="text-blue-600 hover:underline flex items-center gap-1"
+                                        className="text-blue-600 hover:underline flex items-center gap-1 whitespace-nowrap"
                                       >
                                         <ExternalLink className="w-3 h-3" />
                                         View Live
