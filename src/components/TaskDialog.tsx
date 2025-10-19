@@ -126,7 +126,6 @@ export function TaskDialog({
     setAiMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setAiInput("");
     setIsAiLoading(true);
-    console.log(projectDescription);
 
     try {
       // Save user message to database
