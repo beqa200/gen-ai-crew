@@ -65,7 +65,11 @@ const Project = () => {
 
     // Set up realtime subscriptions for live updates
     const tasksChannel = supabase
-      .channel('tasks-changes')
+      .channel('tasks-changes', {
+        config: {
+          broadcast: { self: true }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -73,15 +77,21 @@ const Project = () => {
           schema: 'public',
           table: 'tasks'
         },
-        () => {
-          console.log('Tasks changed, reloading...');
+        (payload) => {
+          console.log('✅ Task change detected:', payload);
           loadTasks();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Tasks channel status:', status);
+      });
 
     const depsChannel = supabase
-      .channel('deps-changes')
+      .channel('deps-changes', {
+        config: {
+          broadcast: { self: true }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -89,15 +99,21 @@ const Project = () => {
           schema: 'public',
           table: 'task_dependencies'
         },
-        () => {
-          console.log('Dependencies changed, reloading...');
+        (payload) => {
+          console.log('✅ Dependency change detected:', payload);
           loadTaskDependencies();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Dependencies channel status:', status);
+      });
 
     const deptsChannel = supabase
-      .channel('depts-changes')
+      .channel('depts-changes', {
+        config: {
+          broadcast: { self: true }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -105,12 +121,14 @@ const Project = () => {
           schema: 'public',
           table: 'departments'
         },
-        () => {
-          console.log('Departments changed, reloading...');
+        (payload) => {
+          console.log('✅ Department change detected:', payload);
           loadDepartments();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Departments channel status:', status);
+      });
 
     return () => {
       supabase.removeChannel(tasksChannel);

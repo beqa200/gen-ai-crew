@@ -42,7 +42,11 @@ const Department = () => {
 
     // Set up realtime subscription for live task updates
     const tasksChannel = supabase
-      .channel('dept-tasks-changes')
+      .channel(`dept-tasks-${departmentId}`, {
+        config: {
+          broadcast: { self: true }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -51,12 +55,14 @@ const Department = () => {
           table: 'tasks',
           filter: `department_id=eq.${departmentId}`
         },
-        () => {
-          console.log('Tasks changed in department, reloading...');
+        (payload) => {
+          console.log('✅ Task change in department:', payload);
           loadTasks();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Department tasks channel status:', status);
+      });
 
     return () => {
       supabase.removeChannel(tasksChannel);
