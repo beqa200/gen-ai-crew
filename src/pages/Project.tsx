@@ -12,6 +12,7 @@ import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye } from
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import { TaskDialog } from "@/components/TaskDialog";
+import { StartTaskDialog } from "@/components/StartTaskDialog";
 import ProjectChatWidget from "@/components/ProjectChatWidget";
 
 interface Project {
@@ -57,6 +58,8 @@ const Project = () => {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [taskDependencies, setTaskDependencies] = useState<TaskDependency[]>([]);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
+  const [taskToStart, setTaskToStart] = useState<Task | null>(null);
 
   useEffect(() => {
     loadProject();
@@ -365,6 +368,52 @@ const Project = () => {
     await loadTaskDependencies();
   };
 
+  const handleStartClick = (task: Task, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setTaskToStart(task);
+    setStartDialogOpen(true);
+  };
+
+  const handleConfirmStart = async () => {
+    if (!taskToStart) return;
+    
+    // Check for incomplete blockers
+    const blockerTaskIds = taskDependencies
+      .filter(dep => dep.task_id === taskToStart.id)
+      .map(dep => dep.depends_on_task_id);
+    
+    const blockerTasks = tasks.filter(t => blockerTaskIds.includes(t.id));
+    const hasIncompleteBlockers = blockerTasks.some(t => t.status !== "completed");
+    
+    if (hasIncompleteBlockers) {
+      toast.error("Cannot start task with incomplete dependencies");
+      setStartDialogOpen(false);
+      setTaskToStart(null);
+      return;
+    }
+    
+    setUpdatingTaskId(taskToStart.id);
+    
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ status: "in_progress" })
+        .eq("id", taskToStart.id);
+
+      if (error) throw error;
+
+      toast.success("Task started successfully");
+      await loadTasks();
+    } catch (error) {
+      console.error("Error starting task:", error);
+      toast.error("Failed to start task");
+    } finally {
+      setUpdatingTaskId(null);
+      setStartDialogOpen(false);
+      setTaskToStart(null);
+    }
+  };
+
   const handleQuickStatusChange = async (taskId: string, newStatus: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -617,7 +666,7 @@ const Project = () => {
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={(e) => handleQuickStatusChange(task.id, "in_progress", e)}
+                                          onClick={(e) => handleStartClick(task, e)}
                                           disabled={updatingTaskId === task.id}
                                           className="h-8 px-2"
                                         >
@@ -680,6 +729,14 @@ const Project = () => {
         allDepartments={departments}
         allTasks={tasks}
         taskDependencies={taskDependencies}
+      />
+
+      <StartTaskDialog
+        open={startDialogOpen}
+        onOpenChange={setStartDialogOpen}
+        onConfirm={handleConfirmStart}
+        taskTitle={taskToStart?.title || ""}
+        isStarting={updatingTaskId === taskToStart?.id}
       />
 
       <ProjectChatWidget projectId={id!} />
