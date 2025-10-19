@@ -28,10 +28,14 @@ interface Project {
   created_at: string;
 }
 
+interface ProjectWithTasks extends Project {
+  taskCount: number;
+}
+
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithTasks[]>([]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -86,7 +90,7 @@ const Dashboard = () => {
   const loadProjects = async (userId: string) => {
     setLoadingProjects(true);
     try {
-      const { data, error } = await supabase
+      const { data: projectsData, error } = await supabase
         .from("projects")
         .select("*")
         .eq("user_id", userId)
@@ -94,7 +98,31 @@ const Dashboard = () => {
 
       if (error) throw error;
       
-      setProjects(data || []);
+      // Fetch task counts for each project
+      const projectsWithTasks = await Promise.all(
+        (projectsData || []).map(async (project) => {
+          // Get departments for this project
+          const { data: departments } = await supabase
+            .from("departments")
+            .select("id")
+            .eq("project_id", project.id);
+          
+          if (!departments || departments.length === 0) {
+            return { ...project, taskCount: 0 };
+          }
+          
+          // Get tasks for these departments
+          const departmentIds = departments.map(d => d.id);
+          const { count } = await supabase
+            .from("tasks")
+            .select("*", { count: 'exact', head: true })
+            .in("department_id", departmentIds);
+          
+          return { ...project, taskCount: count || 0 };
+        })
+      );
+      
+      setProjects(projectsWithTasks);
     } catch (error) {
       console.error("Error loading projects:", error);
       toast.error("Failed to load projects");
@@ -290,7 +318,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted">
-                      <span className="font-medium">0 tasks</span>
+                      <span className="font-medium">{project.taskCount} {project.taskCount === 1 ? 'task' : 'tasks'}</span>
                     </div>
                   </div>
                 </div>
