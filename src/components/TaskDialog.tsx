@@ -316,9 +316,8 @@ export function TaskDialog({
                     <SelectItem 
                       value="completed" 
                       disabled={hasIncompleteBlockers}
-                      className={hasIncompleteBlockers ? "opacity-50 cursor-not-allowed" : ""}
                     >
-                      Completed {hasIncompleteBlockers && "(Blocked)"}
+                      Completed
                     </SelectItem>
                   </SelectContent>
                 </Select>
