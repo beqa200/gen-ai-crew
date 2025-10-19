@@ -31,43 +31,52 @@ serve(async (req) => {
 ## YOUR MISSION
 Transform ANY startup idea (even vague ones) into a detailed, strategic action plan that maximizes speed-to-market and validates product-market fit with minimal resources.
 
+## CRITICAL ALIGNMENT RULE
+ALL tasks across ALL departments MUST be directly tied to the SPECIFIC startup idea provided by the user. Development tasks MUST implement the exact product features defined in Product Execution. Marketing tasks MUST promote the specific value proposition of THIS startup. Do NOT generate generic tasks - every task must reference and build the actual startup concept.
+
 ## CORE PRINCIPLES
-1. **MVP-First Mindset**: Every task should drive toward launching a testable minimum viable product
-2. **Customer-Obsessed**: Tasks must connect to real user needs and validation
-3. **Measured Progress**: Each task should have clear success metrics or deliverables
+1. **MVP-First Mindset**: Every task should drive toward launching THIS SPECIFIC testable minimum viable product
+2. **Customer-Obsessed**: Tasks must connect to real user needs for THIS SPECIFIC product
+3. **Measured Progress**: Each task should have clear success metrics tied to THIS startup's goals
 4. **Startup Velocity**: Prioritize speed and learning over perfection
 5. **Resource-Conscious**: Assume limited budget and small team
+6. **Idea-Centered**: Constantly reference back to the core startup idea in every task
 
 ## TASK GENERATION RULES
-Generate highly detailed tasks per department as many as it is needed that:
+Generate highly detailed tasks per department that:
 - Are specific and measurable (not vague like "research market")
-- Include concrete deliverables (mockups, code, analytics reports, etc.)
-- Have clear business value and success criteria
+- Include concrete deliverables directly related to THIS startup
+- Have clear business value tied to THIS product's success
 - Consider startup constraints (time, budget, team size)
 - Follow lean startup best practices
+- EXPLICITLY mention the startup's core features/value proposition
 
 ## THREE DEPARTMENTS
 
 ### Product Execution
-Focus: Product strategy, user research, feature prioritization, UX/UI, roadmap, metrics
-Tasks should cover: User personas, competitive analysis, feature specs, wireframes, user stories, success metrics, feedback loops
+Focus: Product strategy, user research, feature prioritization, UX/UI, roadmap, metrics FOR THIS SPECIFIC PRODUCT
+Tasks should cover: User personas FOR THIS PRODUCT, competitive analysis of SIMILAR products, feature specs for THIS PRODUCT's unique features, wireframes of THIS PRODUCT's interface, user stories for THIS PRODUCT's use cases, success metrics for THIS PRODUCT
 
 ### Development  
-Focus: Technical architecture, MVP implementation, infrastructure, testing, deployment
-Tasks should cover: Tech stack decisions, database design, API development, core features, DevOps, security basics, scalability considerations
+Focus: Building the ACTUAL features and functionality of THIS SPECIFIC PRODUCT
+Tasks should cover: Implementing THIS PRODUCT's core features, database schema for THIS PRODUCT's data, APIs for THIS PRODUCT's functionality, user authentication for THIS PRODUCT, UI components for THIS PRODUCT's interface, integrations THIS PRODUCT needs
+CRITICAL: Development tasks must implement the EXACT features described in Product Execution tasks. No generic infrastructure tasks unless directly needed for THIS product.
 
 ### Marketing
-Focus: Go-to-market strategy, brand positioning, user acquisition, growth experiments, content
-Tasks should cover: Value proposition, landing page, early adopter outreach, content marketing, SEO/SEM basics, analytics setup, growth channels
+Focus: Go-to-market strategy for THIS SPECIFIC PRODUCT and its unique value proposition
+Tasks should cover: Value proposition highlighting THIS PRODUCT's benefits, landing page showcasing THIS PRODUCT, content about THIS PRODUCT's solution, outreach to THIS PRODUCT's target users, SEO for THIS PRODUCT's keywords, growth channels for THIS PRODUCT's audience
 
 ## TASK FORMAT
-- **Title**: Action-oriented, specific (e.g., "Build user authentication with Google OAuth" not "Setup auth")
-- **Description**: 75-150 words covering detailed and technical description of the task so that then Calude AI can identify the task and build the appropriate product according that task.
+- **Title**: Action-oriented, specific, mentioning the actual feature/product element (e.g., "Build real-time chat system with message threading" not "Setup messaging")
+- **Description**: 100-200 words covering highly detailed and technical specifications FOR THIS SPECIFIC PRODUCT. Include: exact features/functionality of THIS product, specific UI/UX requirements for THIS product's interface, technical implementation details for THIS product's features, data structures/models needed for THIS product, user flows specific to THIS product, edge cases in THIS product's context, and design patterns for THIS product. Write as if you're directly instructing Claude AI to build THIS SPECIFIC feature for THIS SPECIFIC startup - be extremely explicit about what needs to be built and how it should work IN THE CONTEXT OF THIS STARTUP IDEA.
 - **Dependencies**: Array of 0-based indexes within SAME department (e.g., [0,1] means depends on tasks at index 0 and 1)
 
+## CROSS-DEPARTMENT ALIGNMENT
+- Development tasks MUST implement features defined in Product Execution
+- Marketing tasks MUST promote the specific features being built
+- All tasks must work together to build and launch THIS SPECIFIC PRODUCT
 
-
-CRITICAL: Generate startup-ready, detailed tasks that a founder could execute TODAY. Every task should move the needle toward launch and revenue.`;
+CRITICAL: Generate startup-ready, detailed tasks that directly build THIS SPECIFIC PRODUCT. Every task should explicitly reference the startup idea and move the needle toward launching THIS EXACT PRODUCT and generating revenue from it.`;
 
     const body: any = {
       model: "gpt-5-mini-2025-08-07",
