@@ -256,17 +256,26 @@ When users ask you to make changes, use the available tools to execute them imme
               if (!dept) {
                 result = { error: `Department "${args.department_name}" not found` };
               } else {
-                const { data: newTask, error } = await supabaseClient
-                  .from('tasks')
-                  .insert({
-                    department_id: dept.id,
-                    title: args.title,
-                    description: args.description,
-                    status: 'pending'
-                  })
-                  .select()
-                  .single();
-                result = error ? { error: error.message } : { success: true, task: newTask };
+                // Check if task with same title already exists in this department
+                const existingTask = tasks?.find(t => 
+                  t.department_id === dept.id && t.title === args.title
+                );
+                
+                if (existingTask) {
+                  result = { success: false, message: `Task "${args.title}" already exists in ${args.department_name}` };
+                } else {
+                  const { data: newTask, error } = await supabaseClient
+                    .from('tasks')
+                    .insert({
+                      department_id: dept.id,
+                      title: args.title,
+                      description: args.description,
+                      status: 'pending'
+                    })
+                    .select()
+                    .single();
+                  result = error ? { error: error.message } : { success: true, task: newTask };
+                }
               }
               break;
             }

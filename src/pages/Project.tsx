@@ -176,6 +176,14 @@ const Project = () => {
 
       if (error) throw error;
       setTasks(data || []);
+      
+      // Update selectedTask if it's open and got updated
+      if (selectedTask && data) {
+        const updatedTask = data.find(t => t.id === selectedTask.id);
+        if (updatedTask) {
+          setSelectedTask(updatedTask);
+        }
+      }
     } catch (error) {
       console.error("Error loading tasks:", error);
     }
