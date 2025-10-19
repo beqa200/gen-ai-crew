@@ -475,7 +475,7 @@ const Project = () => {
                                   <TableCell className="max-w-md truncate">{task.description}</TableCell>
                                   <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                                      {task.status !== "in_progress" && (
+                                      {task.status !== "completed" && task.status !== "in_progress" && (
                                         <Button
                                           variant="ghost"
                                           size="sm"
