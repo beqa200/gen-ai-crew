@@ -15,6 +15,7 @@ import { User } from "@supabase/supabase-js";
 import Logo from "@/components/Logo";
 import CreateProjectDialog from "@/components/CreateProjectDialog";
 import EditProjectDialog from "@/components/EditProjectDialog";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 interface Profile {
   full_name: string | null;
@@ -32,6 +33,8 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const navigate = useNavigate();
@@ -100,24 +103,26 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteProject = async (projectId: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) {
-      return;
-    }
+  const handleDeleteProject = async () => {
+    if (!deletingProject) return;
 
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("projects")
         .delete()
-        .eq("id", projectId);
+        .eq("id", deletingProject.id);
 
       if (error) throw error;
 
       toast.success("Project deleted successfully");
-      setProjects(projects.filter(p => p.id !== projectId));
+      setProjects(projects.filter(p => p.id !== deletingProject.id));
+      setDeletingProject(null);
     } catch (error: any) {
       console.error("Error deleting project:", error);
       toast.error("Failed to delete project");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -260,7 +265,10 @@ const Dashboard = () => {
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => handleDeleteProject(project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingProject(project);
+                          }}
                           className="cursor-pointer text-destructive focus:text-destructive"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
@@ -299,6 +307,15 @@ const Dashboard = () => {
             onProjectUpdated={handleProjectCreated}
           />
         )}
+
+        <DeleteConfirmDialog
+          open={!!deletingProject}
+          onOpenChange={(open) => !open && setDeletingProject(null)}
+          onConfirm={handleDeleteProject}
+          isDeleting={isDeleting}
+          title="Delete Project"
+          description={`Are you sure you want to delete "${deletingProject?.name}"? This action cannot be undone and will also delete all departments and tasks associated with this project.`}
+        />
       </main>
     </div>
   );
