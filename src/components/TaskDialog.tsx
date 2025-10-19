@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +67,7 @@ export function TaskDialog({
   const [aiInput, setAiInput] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const aiMessagesEndRef = useRef<HTMLDivElement>(null);
 
   // Update editedTask when task prop changes
   useEffect(() => {
@@ -95,6 +96,15 @@ export function TaskDialog({
 
     loadChatHistory();
   }, [task?.id]);
+
+  // Scroll to bottom when AI messages change or AI panel is shown
+  useEffect(() => {
+    if (showAI && aiMessagesEndRef.current) {
+      setTimeout(() => {
+        aiMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [aiMessages, showAI]);
 
   const handleEdit = () => {
     setEditedTask(task);
@@ -447,6 +457,7 @@ export function TaskDialog({
                           <span>Thinking...</span>
                         </div>
                       )}
+                      <div ref={aiMessagesEndRef} />
                     </div>
                   </ScrollArea>
 
