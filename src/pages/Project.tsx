@@ -224,7 +224,41 @@ const Project = () => {
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   const getTasksForDepartment = (deptId: string) => {
-    return tasks.filter(t => t.department_id === deptId);
+    const deptTasks = tasks.filter(t => t.department_id === deptId);
+    
+    // Sort tasks by dependencies (topological sort)
+    const sorted: Task[] = [];
+    const visited = new Set<string>();
+    const temp = new Set<string>();
+    
+    const visit = (taskId: string) => {
+      if (visited.has(taskId)) return;
+      if (temp.has(taskId)) return; // cycle detected, skip
+      
+      temp.add(taskId);
+      
+      // Visit dependencies first
+      const deps = taskDependencies.filter(d => d.task_id === taskId);
+      deps.forEach(dep => {
+        const depTask = deptTasks.find(t => t.id === dep.depends_on_task_id);
+        if (depTask) visit(depTask.id);
+      });
+      
+      temp.delete(taskId);
+      visited.add(taskId);
+      
+      const task = deptTasks.find(t => t.id === taskId);
+      if (task) sorted.push(task);
+    };
+    
+    // Start with tasks that have no dependencies
+    deptTasks.forEach(task => {
+      if (!visited.has(task.id)) {
+        visit(task.id);
+      }
+    });
+    
+    return sorted;
   };
 
   const getDepartmentStats = (deptId: string) => {
