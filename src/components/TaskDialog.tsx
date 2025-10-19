@@ -145,16 +145,13 @@ export function TaskDialog({
 
     setIsUpdatingStatus(true);
     try {
-      const { error } = await supabase
-        .from("tasks")
-        .update({ status: newStatus })
-        .eq("id", task.id);
+      const { error } = await supabase.from("tasks").update({ status: newStatus }).eq("id", task.id);
 
       if (error) throw error;
 
       // Update local state immediately
-      setEditedTask(prev => prev ? { ...prev, status: newStatus } : null);
-      
+      setEditedTask((prev) => (prev ? { ...prev, status: newStatus } : null));
+
       toast.success("Status updated successfully");
       onTaskUpdate();
     } catch (error) {
@@ -187,9 +184,9 @@ export function TaskDialog({
 
       // Get blocker tasks (incomplete dependencies)
       const blockers = taskDependencies
-        .filter(dep => dep.task_id === task.id)
-        .map(dep => allTasks.find(t => t.id === dep.depends_on_task_id))
-        .filter(t => t && t.status !== "completed");
+        .filter((dep) => dep.task_id === task.id)
+        .map((dep) => allTasks.find((t) => t.id === dep.depends_on_task_id))
+        .filter((t) => t && t.status !== "completed");
 
       // Get AI response with chat history and blocker info
       const { data, error } = await supabase.functions.invoke("task-assistant", {
@@ -203,7 +200,7 @@ export function TaskDialog({
             projectDescription: projectDescription,
             projectName: projectName,
             allDepartments: allDepartments?.map((d) => d.name),
-            blockers: blockers.map(b => ({
+            blockers: blockers.map((b) => ({
               title: b?.title,
               status: b?.status,
             })),
@@ -270,11 +267,11 @@ export function TaskDialog({
 
   // Get blocker tasks for this task
   const blockerTaskIds = taskDependencies
-    .filter(dep => dep.task_id === displayTask?.id)
-    .map(dep => dep.depends_on_task_id);
-  
-  const blockerTasks = allTasks.filter(t => blockerTaskIds.includes(t.id));
-  const hasIncompleteBlockers = blockerTasks.some(t => t.status !== "completed");
+    .filter((dep) => dep.task_id === displayTask?.id)
+    .map((dep) => dep.depends_on_task_id);
+
+  const blockerTasks = allTasks.filter((t) => blockerTaskIds.includes(t.id));
+  const hasIncompleteBlockers = blockerTasks.some((t) => t.status !== "completed");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -305,26 +302,16 @@ export function TaskDialog({
                   <Label className="text-sm text-muted-foreground mb-1">Status</Label>
                   <p className="text-sm font-medium">{getStatusLabel(displayTask?.status || "pending")}</p>
                 </div>
-                <Select 
-                  value={displayTask?.status} 
-                  onValueChange={handleQuickStatusChange}
-                  disabled={isUpdatingStatus}
-                >
+                <Select value={displayTask?.status} onValueChange={handleQuickStatusChange} disabled={isUpdatingStatus}>
                   <SelectTrigger className="w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="z-50">
                     <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem 
-                      value="in_progress"
-                      disabled={hasIncompleteBlockers}
-                    >
+                    <SelectItem value="in_progress" disabled={hasIncompleteBlockers}>
                       In Progress
                     </SelectItem>
-                    <SelectItem 
-                      value="completed" 
-                      disabled={hasIncompleteBlockers}
-                    >
+                    <SelectItem value="completed" disabled={hasIncompleteBlockers}>
                       Completed
                     </SelectItem>
                   </SelectContent>
@@ -385,14 +372,15 @@ export function TaskDialog({
                 <div className="space-y-2 pt-4 border-t">
                   <Label>Blocked By</Label>
                   <div className="space-y-2">
-                    {blockerTasks.map(blocker => (
-                      <div key={blocker.id} className="flex items-center justify-between p-2 rounded-lg border bg-muted/30">
+                    {blockerTasks.map((blocker) => (
+                      <div
+                        key={blocker.id}
+                        className="flex items-center justify-between p-2 rounded-lg border bg-muted/30"
+                      >
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">{blocker.title}</span>
                         </div>
-                        <Badge className={getStatusColor(blocker.status)}>
-                          {getStatusLabel(blocker.status)}
-                        </Badge>
+                        <Badge className={getStatusColor(blocker.status)}>{getStatusLabel(blocker.status)}</Badge>
                       </div>
                     ))}
                     {hasIncompleteBlockers && (
@@ -428,7 +416,8 @@ export function TaskDialog({
                     </div>
                     <h4 className="font-semibold">AI Assistant Unavailable</h4>
                     <p className="text-sm text-muted-foreground">
-                      This task is blocked by incomplete dependencies. Complete the blocking tasks first before using the AI assistant.
+                      This task is blocked by incomplete dependencies. Complete the blocking tasks first before using
+                      the AI assistant.
                     </p>
                   </div>
                 </div>
@@ -443,7 +432,10 @@ export function TaskDialog({
                         </p>
                       ) : (
                         aiMessages.map((msg, idx) => (
-                          <div key={idx} className={`p-3 rounded-lg ${msg.role === "user" ? "bg-primary/10" : "bg-muted"}`}>
+                          <div
+                            key={idx}
+                            className={`p-3 rounded-lg ${msg.role === "user" ? "bg-primary/10" : "bg-muted"}`}
+                          >
                             <p className="text-sm font-medium mb-1">{msg.role === "user" ? "You" : "AI Assistant"}</p>
                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                           </div>
@@ -458,7 +450,7 @@ export function TaskDialog({
                     </div>
                   </ScrollArea>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pb-2">
                     <Input
                       value={aiInput}
                       onChange={(e) => setAiInput(e.target.value)}
