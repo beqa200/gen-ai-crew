@@ -182,6 +182,7 @@ const Project = () => {
       setTasksGenerated(true);
       await loadDepartments();
       await loadTasks();
+      await loadTaskDependencies();
     } catch (error: any) {
       console.error("Error generating tasks:", error);
       toast.error(error.message || "Failed to generate tasks");
