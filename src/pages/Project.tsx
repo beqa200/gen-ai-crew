@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye } from "lucide-react";
+import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import { TaskDialog } from "@/components/TaskDialog";
@@ -35,6 +35,7 @@ interface Task {
   department_id: string;
   image_url: string | null;
   created_at: string;
+  deployed_url?: string | null;
 }
 
 interface TaskDependency {
@@ -395,18 +396,28 @@ const Project = () => {
     setUpdatingTaskId(taskToStart.id);
     
     try {
-      const { error } = await supabase
-        .from("tasks")
-        .update({ status: "in_progress" })
-        .eq("id", taskToStart.id);
+      toast.loading("Building and deploying website with AI...");
+      
+      // Call the build-and-deploy edge function
+      const { data, error } = await supabase.functions.invoke('build-and-deploy', {
+        body: { 
+          taskId: taskToStart.id,
+          taskTitle: taskToStart.title,
+          taskDescription: taskToStart.description
+        }
+      });
 
       if (error) throw error;
 
-      toast.success("Task started successfully");
-      await loadTasks();
+      if (data?.success) {
+        toast.success(`Website deployed! View at: ${data.deployedUrl}`);
+        await loadTasks();
+      } else {
+        throw new Error(data?.error || 'Deployment failed');
+      }
     } catch (error) {
-      console.error("Error starting task:", error);
-      toast.error("Failed to start task");
+      console.error("Error building and deploying:", error);
+      toast.error("Failed to build and deploy website");
     } finally {
       setUpdatingTaskId(null);
       setStartDialogOpen(false);
@@ -643,6 +654,7 @@ const Project = () => {
                                 <TableHead>Task</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="max-w-md">Description</TableHead>
+                                <TableHead>Deployed</TableHead>
                                 <TableHead className="text-right">Quick Actions</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -660,6 +672,22 @@ const Project = () => {
                                     </Badge>
                                   </TableCell>
                                   <TableCell className="max-w-md truncate">{task.description}</TableCell>
+                                  <TableCell>
+                                    {task.deployed_url ? (
+                                      <a 
+                                        href={task.deployed_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-blue-600 hover:underline flex items-center gap-1"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                        View Live
+                                      </a>
+                                    ) : (
+                                      <span className="text-muted-foreground text-sm">-</span>
+                                    )}
+                                  </TableCell>
                                   <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                                       {task.status !== "completed" && task.status !== "in_progress" && (

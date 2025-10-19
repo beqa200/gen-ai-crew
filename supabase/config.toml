@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.project-assistant]
 verify_jwt = true
+
+[functions.build-and-deploy]
+verify_jwt = true

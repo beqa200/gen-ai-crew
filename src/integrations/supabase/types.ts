@@ -193,6 +193,7 @@ export type Database = {
         Row: {
           created_at: string
           department_id: string
+          deployed_url: string | null
           description: string
           id: string
           image_url: string | null
@@ -202,6 +203,7 @@ export type Database = {
         Insert: {
           created_at?: string
           department_id: string
+          deployed_url?: string | null
           description: string
           id?: string
           image_url?: string | null
@@ -211,6 +213,7 @@ export type Database = {
         Update: {
           created_at?: string
           department_id?: string
+          deployed_url?: string | null
           description?: string
           id?: string
           image_url?: string | null
