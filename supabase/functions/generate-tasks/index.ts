@@ -61,12 +61,8 @@ Focus: Go-to-market strategy, brand positioning, user acquisition, growth experi
 Tasks should cover: Value proposition, landing page, early adopter outreach, content marketing, SEO/SEM basics, analytics setup, growth channels
 
 ## TASK FORMAT
-- **Title**: Action-oriented detailed tehnical desciption of the task, specific (e.g., "Build user authentication with Google OAuth" not "Setup auth")
-- **Description**: 75-150 words covering:
-  • WHY: Business value and impact
-  • WHAT: Specific deliverables and success criteria  
-  • HOW: Key steps, tools, or approaches
-  • METRICS: How to measure success
+- **Title**: Action-oriented, specific (e.g., "Build user authentication with Google OAuth" not "Setup auth")
+- **Description**: 75-150 words covering detailed and technical description of the task so that next AI Asisstant can build it.
 - **Dependencies**: Array of 0-based indexes within SAME department (e.g., [0,1] means depends on tasks at index 0 and 1)
 
 ## CREATIVE INTELLIGENCE
