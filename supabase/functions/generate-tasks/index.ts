@@ -33,6 +33,7 @@ When a user describes their startup idea (even if vague or incomplete), you MUST
 2. Generate complete, actionable tasks across three departments
 3. NEVER ask for clarification - be proactive and creative
 4. Generate 5-8 detailed tasks per department (15-24 tasks total)
+5. Identify logical dependencies - which tasks must be completed before others can start
 
 The three departments are:
 - Product Execution: Focus on product strategy, features, user experience, roadmap
@@ -42,8 +43,11 @@ The three departments are:
 For each task:
 - Title: Clear, actionable (5-10 words)
 - Description: Detailed explanation with specific steps and goals (50-100 words)
+- Dependencies: Indexes (0-based) of tasks within the SAME department that must be completed before this task (e.g., [0, 1] means depends on first and second task)
 
-Be creative with incomplete ideas. If the user says "a fitness app", you should assume it's a mobile app with tracking, social features, gamification, etc. Make intelligent assumptions!`;
+Be creative with incomplete ideas. If the user says "a fitness app", you should assume it's a mobile app with tracking, social features, gamification, etc. Make intelligent assumptions!
+
+IMPORTANT: Dependencies are 0-indexed positions within each department's task list. A task can only depend on tasks that come BEFORE it in the list.`;
 
     const body: any = {
       model: "gpt-5-mini-2025-08-07",
@@ -75,7 +79,12 @@ Be creative with incomplete ideas. If the user says "a fitness app", you should 
                           type: "object",
                           properties: {
                             title: { type: "string" },
-                            description: { type: "string" }
+                            description: { type: "string" },
+                            dependsOn: { 
+                              type: "array",
+                              items: { type: "number" },
+                              description: "Array of task indexes (0-based) within this department that this task depends on"
+                            }
                           },
                           required: ["title", "description"],
                           additionalProperties: false
@@ -179,9 +188,10 @@ Be creative with incomplete ideas. If the user says "a fitness app", you should 
         status: 'pending'
       }));
 
-      const { error: tasksError } = await supabase
+      const { data: createdTasks, error: tasksError } = await supabase
         .from('tasks')
-        .insert(tasksToInsert);
+        .insert(tasksToInsert)
+        .select();
 
       if (tasksError) {
         console.error('Error creating tasks:', tasksError);
@@ -189,6 +199,35 @@ Be creative with incomplete ideas. If the user says "a fitness app", you should 
       }
 
       console.log(`Created ${dept.tasks.length} tasks for ${dept.name}`);
+
+      // Create task dependencies
+      const dependencies = [];
+      for (let i = 0; i < dept.tasks.length; i++) {
+        const task = dept.tasks[i];
+        if (task.dependsOn && Array.isArray(task.dependsOn) && task.dependsOn.length > 0) {
+          for (const depIndex of task.dependsOn) {
+            if (depIndex < i && depIndex >= 0 && createdTasks[depIndex]) {
+              dependencies.push({
+                task_id: createdTasks[i].id,
+                depends_on_task_id: createdTasks[depIndex].id
+              });
+            }
+          }
+        }
+      }
+
+      if (dependencies.length > 0) {
+        const { error: depsError } = await supabase
+          .from('task_dependencies')
+          .insert(dependencies);
+
+        if (depsError) {
+          console.error('Error creating task dependencies:', depsError);
+          // Don't throw - dependencies are not critical
+        } else {
+          console.log(`Created ${dependencies.length} task dependencies for ${dept.name}`);
+        }
+      }
 
       createdDepartments.push({
         ...department,
