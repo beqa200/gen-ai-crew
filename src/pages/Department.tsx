@@ -39,6 +39,28 @@ const Department = () => {
   useEffect(() => {
     loadDepartment();
     loadTasks();
+
+    // Set up realtime subscription for live task updates
+    const tasksChannel = supabase
+      .channel('dept-tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `department_id=eq.${departmentId}`
+        },
+        () => {
+          console.log('Tasks changed in department, reloading...');
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tasksChannel);
+    };
   }, [departmentId]);
 
   const loadDepartment = async () => {
