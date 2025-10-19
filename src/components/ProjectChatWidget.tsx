@@ -32,10 +32,10 @@ const ProjectChatWidget = ({ projectId }: ProjectChatWidgetProps) => {
   }, [isOpen, projectId]);
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && isOpen) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isOpen]);
 
   const loadChatHistory = async () => {
     try {
