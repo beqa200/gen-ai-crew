@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const { message, taskContext, chatHistory } = await req.json();
+    console.log('Task context received:', JSON.stringify(taskContext, null, 2));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
