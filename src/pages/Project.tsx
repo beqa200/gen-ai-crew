@@ -66,6 +66,8 @@ const Project = () => {
   const [taskToStart, setTaskToStart] = useState<Task | null>(null);
 
   useEffect(() => {
+    // Reset userMessage when project changes
+    setUserMessage("");
     loadProject();
     loadDepartments();
     loadTasks();
