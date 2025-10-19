@@ -8,11 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye, ExternalLink } from "lucide-react";
+import { ArrowLeft, Send, Loader2, CheckCircle2, ListTodo, BarChart3, Eye, ExternalLink, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import { TaskDialog } from "@/components/TaskDialog";
 import { StartTaskDialog } from "@/components/StartTaskDialog";
+import { CreateTaskDialog } from "@/components/CreateTaskDialog";
 import ProjectChatWidget from "@/components/ProjectChatWidget";
 
 interface Project {
@@ -64,6 +65,8 @@ const Project = () => {
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [taskToStart, setTaskToStart] = useState<Task | null>(null);
+  const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [redoingTaskId, setRedoingTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     // Reset userMessage when project changes
@@ -470,6 +473,41 @@ const Project = () => {
     }
   };
 
+  const handleRedoTask = async (task: Task, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    setRedoingTaskId(task.id);
+    
+    try {
+      toast.loading("Rebuilding website with AI...");
+      
+      // Call the build-and-deploy edge function
+      const { data, error } = await supabase.functions.invoke('build-and-deploy', {
+        body: { 
+          taskId: task.id,
+          taskTitle: task.title,
+          taskDescription: task.description,
+          projectId: id
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(`Website rebuilt and deployed successfully!`);
+        await loadTasks();
+        await loadProject();
+      } else {
+        throw new Error(data?.error || 'Deployment failed');
+      }
+    } catch (error) {
+      console.error("Error rebuilding:", error);
+      toast.error("Failed to rebuild website");
+    } finally {
+      setRedoingTaskId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-hero">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
@@ -598,7 +636,17 @@ const Project = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Departments & Tasks</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Departments & Tasks</CardTitle>
+                  <Button
+                    onClick={() => setCreateTaskDialogOpen(true)}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Task
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <Tabs 
@@ -705,7 +753,7 @@ const Project = () => {
                                       <span className="text-muted-foreground text-sm">-</span>
                                     )}
                                   </TableCell>
-                                  <TableCell className="text-right">
+                                   <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                                       {task.status !== "completed" && task.status !== "in_progress" && (
                                         <Button
@@ -717,6 +765,19 @@ const Project = () => {
                                         >
                                           <Loader2 className="w-3 h-3 mr-1" />
                                           Start
+                                        </Button>
+                                      )}
+                                      {task.status !== "pending" && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => handleRedoTask(task, e)}
+                                          disabled={redoingTaskId === task.id}
+                                          className="h-8 px-2"
+                                          title="Rebuild this task"
+                                        >
+                                          <RefreshCw className="w-3 h-3 mr-1" />
+                                          Redo
                                         </Button>
                                       )}
                                       {task.status !== "completed" && (
@@ -782,6 +843,16 @@ const Project = () => {
         onConfirm={handleConfirmStart}
         taskTitle={taskToStart?.title || ""}
         isStarting={updatingTaskId === taskToStart?.id}
+      />
+
+      <CreateTaskDialog
+        open={createTaskDialogOpen}
+        onOpenChange={setCreateTaskDialogOpen}
+        departments={departments}
+        onTaskCreated={async () => {
+          await loadTasks();
+          await loadTaskDependencies();
+        }}
       />
 
       <ProjectChatWidget projectId={id!} />
