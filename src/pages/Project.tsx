@@ -217,9 +217,6 @@ const Project = () => {
           </div>
           <div className="text-right">
             <h1 className="font-semibold">{project.name}</h1>
-            {project.description && (
-              <p className="text-sm text-muted-foreground">{project.description}</p>
-            )}
           </div>
         </div>
       </header>
