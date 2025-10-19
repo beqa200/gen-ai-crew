@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,7 @@ interface TaskDependency {
 const Project = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [project, setProject] = useState<Project | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -523,7 +524,11 @@ const Project = () => {
                 <CardTitle>Departments & Tasks</CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue={departments[0]?.id} className="w-full">
+                <Tabs 
+                  value={searchParams.get('tab') || departments[0]?.id} 
+                  onValueChange={(value) => setSearchParams({ tab: value })}
+                  className="w-full"
+                >
                   <TabsList className="w-full justify-start flex-wrap h-auto">
                     {departments.map((dept) => {
                       const stats = getDepartmentStats(dept.id);
